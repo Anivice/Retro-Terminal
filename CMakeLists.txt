@@ -10,5 +10,6 @@ endif ()
 add_executable(Retro_Terminal
         main.cpp
         log.cpp         include/log.h
+        file.cpp        include/file.h
 )
 target_include_directories(Retro_Terminal PRIVATE ${CMAKE_SOURCE_DIR}/include)
