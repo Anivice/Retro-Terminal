@@ -146,7 +146,6 @@ namespace debug {
     /////////////////////////////////////////////////////////////////////////////////////////////
     extern std::string str_true;
     extern std::string str_false;
-    template <typename... Args> void log(const Args&... args);
 
     template <typename Container>
 	requires (debug::is_container_v<Container> &&
