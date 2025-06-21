@@ -10,9 +10,12 @@ private:
 
 public:
     void close() const;
-    void open(const std::string & path);
-    size_t read(void * buffer, size_t location, size_t size) const;
-    size_t write(const void * buffer, size_t location, size_t size);
+    void open(const std::string & path, int mode);
+    void open_rw(const std::string & path);
+    void read(void * buffer, size_t location, size_t size) const;
+    void write(const void * buffer, size_t location, size_t size);
+    explicit file(const std::string & path, int mode) { open(path, mode); }
+    explicit file(const std::string & path) { open_rw(path); }
 
     ~file();
     file() = default;

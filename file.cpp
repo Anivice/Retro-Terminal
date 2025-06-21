@@ -3,6 +3,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <stdexcept>
+#include "cpp_assert.h"
 
 void file::close() const
 {
@@ -12,31 +13,37 @@ void file::close() const
     }
 }
 
-void file::open(const std::string & path)
+void file::open(const std::string & path, const int mode)
 {
-    fd = ::open(path.c_str(), O_RDONLY);
+    fd = ::open(path.c_str(), mode);
     if (fd < 0)
     {
-        throw std::runtime_error("file::open():" + std::string(strerror(errno)));
+        throw runtime_error("file::open(): " + std::string(strerror(errno)));
     }
 }
 
-size_t file::read(void * buffer, const size_t location, const size_t size) const
+void file::open_rw(const std::string & path)
 {
-    if (::lseek(fd, static_cast<long>(location), SEEK_SET) == -1)
-    {
-        throw std::runtime_error("file::read():" + std::string(strerror(errno)));
-    }
-    return ::read(fd, buffer, size);
+    open(path, O_RDWR);
 }
 
-size_t file::write(const void * buffer, const size_t location, const size_t size)
+void file::read(void * buffer, const size_t location, const size_t size) const
 {
     if (::lseek(fd, static_cast<long>(location), SEEK_SET) == -1)
     {
-        throw std::runtime_error("file::read():" + std::string(strerror(errno)));
+        throw runtime_error("file::read(): " + std::string(strerror(errno)));
     }
-    return ::write(fd, buffer, size);
+
+    assert_throw(::read(fd, buffer, size) == size, std::string("file::read(): " + std::string(strerror(errno))));
+}
+
+void file::write(const void * buffer, const size_t location, const size_t size)
+{
+    if (::lseek(fd, static_cast<long>(location), SEEK_SET) == -1)
+    {
+        throw runtime_error("file::read(): " + std::string(strerror(errno)));
+    }
+    assert_throw(::write(fd, buffer, size) == size, std::string("file::write(): " + std::string(strerror(errno))));
 }
 
 file::~file()
