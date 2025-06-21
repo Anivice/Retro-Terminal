@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include "backtrace.h"
 
-class runtime_error : public std::runtime_error
+class runtime_error final : public std::runtime_error
 {
     std::string additional;
 public:
