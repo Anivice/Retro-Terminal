@@ -10,6 +10,8 @@
 #include <dlfcn.h>
 #include "log.h"
 #include <cxxabi.h>
+#include <algorithm>
+#include <ranges>
 #define MAX_STACK_FRAMES (64)
 
 std::string demangle(const char* mangled)
@@ -88,11 +90,11 @@ public:
             }
         }
 
-        std::sort(symbol_vector.begin(), symbol_vector.end(),
-            [](const std::pair<uint64_t, std::string> & a, const std::pair<uint64_t, std::string> & b)->bool
-            {
-                return a.first < b.first;
-            });
+        std::ranges::sort(symbol_vector,
+                          [](const std::pair<uint64_t, std::string> & a, const std::pair<uint64_t, std::string> & b)->bool
+                          {
+                              return a.first < b.first;
+                          });
 
         const int64_t offset = (uint64_t)(void*)main - main_addr;
         for (auto& addr : symbol_vector | std::views::keys)
