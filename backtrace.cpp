@@ -110,6 +110,27 @@ std::string backtrace_level_1()
     }
     std::stringstream ss;
     const backtrace_info frames = obtain_stack_frame();
+    int i = 0;
+    bool trim = get_env("TRIM_SYMBOL") == "True";
+    constexpr uint64_t max_symbol_length = 64;
+    constexpr float max_symbol_ratio = 0.65;
+    constexpr uint64_t symbol_trim_first_length = max_symbol_length * max_symbol_ratio;
+    constexpr uint64_t symbol_trim_second_length = max_symbol_length - symbol_trim_first_length - 3;
+    auto trim_sym = [&trim](const std::string & name)->std::string
+    {
+        if (trim)
+        {
+            if (name.size() > max_symbol_length)
+            {
+                const std::string first = name.substr(0, symbol_trim_first_length);
+                const std::string second = name.substr(name.size() - symbol_trim_second_length);
+                return first + "..." + second;
+            }
+        }
+
+        return name;
+    };
+
     for (auto & [symbol, frame] : frames)
     {
         std::string symbol_name;
@@ -123,7 +144,9 @@ std::string backtrace_level_1()
             symbol_name = symbol_in_map;
         }
 
-        ss << "Symbol: " << symbol << " Frame: " << std::hex << frame << " Name: " << symbol_name << "\n";
+        ss  << color(0,4,1) << "Frame " << color(5,0,0) << "#" << i++ << " "
+            << std::hex << color(2,4,5) << frame
+            << ": " << color(1,5,5) << trim_sym(symbol_name) << no_color << "\n";
     }
 
     return ss.str();
@@ -163,7 +186,8 @@ std::string backtrace_level_2(const std::vector<std::string> & excluded_file_lis
         std::string file;
     };
 
-    auto generate_addr2line_trace_info = [](const std::string & executable_path, const std::string& address)->traced_info
+    bool trim = get_env("TRIM_SYMBOL") == "True";
+    auto generate_addr2line_trace_info = [&trim](const std::string & executable_path, const std::string& address)->traced_info
     {
         auto [fd_stdout, fd_stderr, exit_status]
             = exec_command("/usr/bin/addr2line", "", "--demangle", "-f", "-p", "-a", "-e",
@@ -180,8 +204,11 @@ std::string backtrace_level_2(const std::vector<std::string> & excluded_file_lis
             path = fd_stdout.substr(pos);
         }
 
-        if (const size_t pos2 = caller.find('('); pos2 != std::string::npos) {
-            caller = caller.substr(0, pos2);
+        if (trim)
+        {
+            if (const size_t pos2 = caller.find('('); pos2 != std::string::npos) {
+                caller = caller.substr(0, pos2);
+            }
         }
 
         if (!caller.empty() && !path.empty()) {
