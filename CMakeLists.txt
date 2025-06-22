@@ -33,7 +33,6 @@ if ("X${CMAKE_BUILD_TYPE}" STREQUAL "XDebug")
 
             -fno-eliminate-unused-debug-types
             -fno-omit-frame-pointer
-            -lasan -lubsan -fPIC --pie
             -Wl,-z,relro -Wl,-z,now
             -fstack-protector-all
     )
@@ -55,7 +54,6 @@ if ("X${CMAKE_BUILD_TYPE}" STREQUAL "XDebug")
 
             # Stack protection
             -fstack-protector-all                   # Link with stack protection for all functions
-            -lasan -lubsan -fPIC --pie --whole-file
             -Wl,-z,relro -Wl,-z,now
     )
 
@@ -69,6 +67,7 @@ if ("X${CMAKE_BUILD_TYPE}" STREQUAL "XDebug")
         list(APPEND linker_options
                 -fsanitize=address                  # Link the AddressSanitizer runtime for memory integrity
                 -fsanitize=undefined                # Link the UndefinedBehaviorSanitizer for detecting undefined behavior
+                -lasan -lubsan
         )
     endif ()
     add_compile_options(${compiler_options})
