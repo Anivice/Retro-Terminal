@@ -1,5 +1,6 @@
 #include "backtrace.h"
-
+#include "color.h"
+#include "get_env.h"
 #include <atomic>
 #include <vector>
 #include <execinfo.h>
@@ -7,9 +8,6 @@
 #include <regex>
 #include "execute.h"
 #define MAX_STACK_FRAMES (64)
-// env variables
-#define BACKTRACE_LEVEL "BACKTRACE_LEVEL"
-#define COLOR "COLOR"
 
 typedef std::vector < std::pair<std::string, void*> > backtrace_info;
 backtrace_info obtain_stack_frame()
@@ -30,60 +28,6 @@ backtrace_info obtain_stack_frame()
     free(symbols);
     return result;
 }
-
-std::string get_env(const std::string & name)
-{
-    const char * ptr = std::getenv(name.c_str());
-    if (ptr == nullptr)
-    {
-        return "";
-    }
-
-    return ptr;
-}
-
-template <typename IntType>
-IntType get_variable(const std::string & name)
-{
-    const auto var = get_env(name);
-    if (var.empty())
-    {
-        return 0;
-    }
-
-    return static_cast<IntType>(strtoll(var.c_str(), nullptr, 10));
-}
-
-std::string color(int r, int g, int b, int br, int bg, int bb)
-{
-    const auto color_env = get_env(COLOR);
-    if (color_env == "never" || color_env == "none" || color_env == "off" || color_env == "no" || color_env == "n")
-    {
-        return "";
-    }
-
-    auto constrain = [](int var, int min, int max)->int
-    {
-        var = std::max(var, min);
-        var = std::min(var, max);
-        return var;
-    };
-
-    r = constrain(r, 0, 5);
-    g = constrain(g, 0, 5);
-    b = constrain(b, 0, 5);
-
-    br = constrain(br, 0, 5);
-    bg = constrain(bg, 0, 5);
-    bb = constrain(bb, 0, 5);
-
-    int scale = 16 + 36 * r + 6 * g + b;
-    int bg_scale = 16 + 36 * br + 6 * bg + bb;
-
-    return "\033[38;5;" + std::to_string(scale) + "m" + "\033[48;5;" + std::to_string(bg_scale) + "m";
-}
-
-std::atomic < const char * > no_color = "\033[0m";
 
 std::string backtrace_level_1()
 {
@@ -185,11 +129,11 @@ std::string backtrace_level_2(const std::vector<std::string> & excluded_file_lis
                 }
             }
 
-            ss  << color(0,4,1,0,0,0) << "Frame " << color(5,0,0,0,0,2) << "#" << i++ << " "
-                << std::hex << color(2,4,5, 0, 0, 0) << frame
-                << ": " << color(1,5,5,0,0,0) << info.name << no_color << "\n";
+            ss  << color(0,4,1) << "Frame " << color(5,0,0) << "#" << i++ << " "
+                << std::hex << color(2,4,5) << frame
+                << ": " << color(1,5,5) << info.name << no_color << "\n";
             if (!info.file.empty())
-                ss << "          " << color(1,1,3, 0, 0, 0) << info.file << no_color << "\n";
+                ss << "          " << color(0,1,5) << info.file << no_color << "\n";
         } else {
             ss << "No trace information for " << std::hex << frame << "\n";
         }

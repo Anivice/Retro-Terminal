@@ -15,5 +15,9 @@ add_executable(lfs
         backtrace.cpp   include/backtrace.h
         execute.cpp     include/execute.h
         include/err_type.h
+        color.cpp
+        include/color.h
+        get_env.cpp
+        include/get_env.h
 )
 target_include_directories(lfs PRIVATE ${CMAKE_SOURCE_DIR}/include)
