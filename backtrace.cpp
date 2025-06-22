@@ -7,7 +7,19 @@
 #include <sstream>
 #include <regex>
 #include "execute.h"
+#include <dlfcn.h>
+#include "log.h"
+#include <cxxabi.h>
 #define MAX_STACK_FRAMES (64)
+
+std::string demangle(const char* mangled)
+{
+    int status = 0;
+    char* dem = abi::__cxa_demangle(mangled, nullptr, nullptr, &status);
+    std::string result = (status == 0 && dem) ? dem : mangled;
+    std::free(dem);
+    return result;
+}
 
 typedef std::vector < std::pair<std::string, void*> > backtrace_info;
 backtrace_info obtain_stack_frame()
@@ -29,9 +41,92 @@ backtrace_info obtain_stack_frame()
     return result;
 }
 
+int main(int, char**);
+
+class backtrace_level_1_init
+{
+public:
+    std::vector<std::pair<uint64_t, std::string>> symbol_vector{};
+    backtrace_level_1_init()
+    {
+        const auto sym_map_lib = get_env("SYMMAP");
+        if (sym_map_lib.empty())
+        {
+            return;
+        }
+        void *handle = dlopen(sym_map_lib.c_str(), RTLD_LAZY);
+        if (!handle)
+        {
+            return;
+        }
+
+        auto * sym_map_len = static_cast<unsigned int*>(dlsym(handle, "sym_map_len"));
+        auto * sym_map = static_cast<unsigned char*>(dlsym(handle, "sym_map"));
+
+        std::vector<char> sym_map_data;
+        sym_map_data.resize(*sym_map_len + 1);
+        std::memcpy(sym_map_data.data(), sym_map, *sym_map_len);
+        sym_map_data[*sym_map_len] = 0;
+        const std::string sym_map_str(sym_map_data.data());
+        std::stringstream ss(sym_map_str);
+        uint64_t main_addr = 0;
+        while (ss)
+        {
+            std::string hex_addr, symbol;
+            ss >> hex_addr >> symbol;
+            if (hex_addr.empty() || symbol.empty())
+            {
+                break;
+            }
+
+            symbol_vector.emplace_back(std::make_pair<uint64_t, std::string>(
+                std::stoul(hex_addr, nullptr, 16),
+                demangle(symbol.c_str())));
+            if (symbol == "main")
+            {
+                main_addr = std::stoul(hex_addr, nullptr, 16);
+            }
+        }
+
+        std::sort(symbol_vector.begin(), symbol_vector.end(),
+            [](const std::pair<uint64_t, std::string> & a, const std::pair<uint64_t, std::string> & b)->bool
+            {
+                return a.first < b.first;
+            });
+
+        const int64_t offset = (uint64_t)(void*)main - main_addr;
+        for (auto& addr : symbol_vector | std::views::keys)
+        {
+            addr += offset;
+        }
+    }
+} backtrace_level_1_init_;
+
 std::string backtrace_level_1()
 {
-    return "BACKTRACE LEVEL 1";
+    if (backtrace_level_1_init_.symbol_vector.empty())
+    {
+        return "BACKTRACE LEVEL 1: No symbol map";
+    }
+    std::stringstream ss;
+    const backtrace_info frames = obtain_stack_frame();
+    for (auto & [symbol, frame] : frames)
+    {
+        std::string symbol_name;
+        for (auto & [addr, symbol_in_map] : backtrace_level_1_init_.symbol_vector)
+        {
+            if (addr > (uint64_t)frame)
+            {
+                break;
+            }
+
+            symbol_name = symbol_in_map;
+        }
+
+        ss << "Symbol: " << symbol << " Frame: " << std::hex << frame << " Name: " << symbol_name << "\n";
+    }
+
+    return ss.str();
 }
 
 std::string replace_all(

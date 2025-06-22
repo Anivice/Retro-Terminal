@@ -1,7 +1,7 @@
 #include "log.h"
 #include "file.h"
 
-int main()
+int main(int argc, char **argv)
 {
     try
     {
