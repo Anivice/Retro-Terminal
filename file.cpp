@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <stdexcept>
 #include "cpp_assert.h"
+#include <cerrno>
 
 void file::close() const
 {
