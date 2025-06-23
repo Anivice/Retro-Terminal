@@ -90,6 +90,8 @@ add_executable(lfs
         helper/configuration.cpp        include/helper/configuration.h
 )
 target_include_directories(lfs PRIVATE ${CMAKE_SOURCE_DIR}/include)
+find_package(Qt6 REQUIRED COMPONENTS Gui)
+target_link_libraries(lfs PRIVATE Qt6::GuiPrivate)
 
 add_custom_target(remove_objmap_c
         COMMAND rm -f ${CMAKE_BINARY_DIR}/objmap.cpp

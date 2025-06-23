@@ -5,6 +5,8 @@
 #include "helper/cpp_assert.h"
 #include <atomic>
 #include <algorithm>
+#include <rhi/qrhi.h>
+#include "helper/get_env.h"
 
 std::atomic_bool g_verbose{false};
 
@@ -139,6 +141,13 @@ int main(int argc, char **argv)
         if (contains("config", arg_val))
         {
             process_config(configuration(arg_val));
+        }
+
+        if (!get_env("VERBOSE").empty())
+        {
+            const bool before = g_verbose;
+            g_verbose = true_false_helper(get_env("VERBOSE"));
+            if (before && !g_verbose) debug_log("Verbose mode disabled by environment variable\n");
         }
 
         assert_short(false);
