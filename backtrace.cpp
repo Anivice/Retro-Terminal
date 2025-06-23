@@ -102,7 +102,7 @@ void backtrace_level_1_init::initialize(const char * path)
 
 backtrace_level_1_init::backtrace_level_1_init()
 {
-    const auto sym_map_lib = get_env("SYMMAP");
+    const auto sym_map_lib = get_env("SYMBOL_MAP");
     if (sym_map_lib.empty())
     {
         return;
@@ -111,8 +111,8 @@ backtrace_level_1_init::backtrace_level_1_init()
     initialize(sym_map_lib.c_str());
 }
 
-backtrace_level_1_init backtrace_level_1_init_;
-std::atomic_bool trim_symbol = false;
+backtrace_level_1_init g_backtrace_level_1_init_;
+std::atomic_bool g_trim_symbol = false;
 
 std::string replace_all(
     std::string & original,
@@ -136,7 +136,7 @@ std::string replace_all(
 
 bool trim_symbol_yes()
 {
-    return get_env("TRIM_SYMBOL").empty() ? trim_symbol.load() : true_false_helper(get_env("TRIM_SYMBOL"));
+    return get_env("TRIM_SYMBOL").empty() ? g_trim_symbol.load() : true_false_helper(get_env("TRIM_SYMBOL"));
 }
 
 bool true_false_helper(std::string val)
@@ -154,7 +154,7 @@ bool true_false_helper(std::string val)
 // fast backtrace
 std::string backtrace_level_1()
 {
-    if (backtrace_level_1_init_.symbol_vector.empty())
+    if (g_backtrace_level_1_init_.symbol_vector.empty())
     {
         return "BACKTRACE LEVEL 1: No symbol map";
     }
@@ -177,7 +177,7 @@ std::string backtrace_level_1()
     for (auto & [symbol, frame] : frames)
     {
         std::string symbol_name;
-        for (auto & [addr, symbol_in_map] : backtrace_level_1_init_.symbol_vector)
+        for (auto & [addr, symbol_in_map] : g_backtrace_level_1_init_.symbol_vector)
         {
             if (addr > (uint64_t)frame)
             {
@@ -287,11 +287,11 @@ std::string backtrace_level_2(const std::vector<std::string> & excluded_file_lis
     return ss.str();
 }
 
-std::atomic_int pre_defined_level = -1;
+std::atomic_int g_pre_defined_level = -1;
 
 std::string backtrace()
 {
-    switch (/* const auto level = */get_env(BACKTRACE_LEVEL).empty() ? pre_defined_level.load() : get_variable<int>(BACKTRACE_LEVEL))
+    switch (/* const auto level = */get_env(BACKTRACE_LEVEL).empty() ? g_pre_defined_level.load() : get_variable<int>(BACKTRACE_LEVEL))
     {
         case 1: return backtrace_level_1();
         case 2: return backtrace_level_2({"backtrace.cpp", "err_type.h"});

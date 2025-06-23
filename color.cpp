@@ -5,6 +5,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "cpp_assert.h"
+#include <atomic>
+
+std::atomic_bool g_no_color = false;
 
 bool is_no_color()
 {
@@ -26,7 +29,7 @@ bool is_no_color()
         is_terminal = true;
     }
 
-    return no_color_from_env || !is_terminal;
+    return no_color_from_env || !is_terminal || g_no_color;
 }
 
 std::string no_color()

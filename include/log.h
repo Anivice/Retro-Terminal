@@ -338,7 +338,8 @@ namespace debug {
     }
 }
 
-#ifndef __NO_CALLER__
+#if DEBUG
+# ifndef __NO_CALLER__
 #   include <source_location>
     inline std::string strip_name(const std::string & name)
     {
@@ -350,8 +351,11 @@ namespace debug {
         return name;
     }
 #   define debug_log(...) ::debug::log(strip_name(std::source_location::current().function_name()).c_str(), __VA_ARGS__)
-#else
+# else
 #   define debug_log(...) ::debug::log(__VA_ARGS__)
+# endif
+#else
+# define debug_log(...) __asm__("nop")
 #endif
 
 #endif // LOG_H

@@ -16,9 +16,9 @@ public:
     backtrace_level_1_init();
 };
 
-extern backtrace_level_1_init backtrace_level_1_init_;
-extern std::atomic_int pre_defined_level;
-extern std::atomic_bool trim_symbol;
+extern backtrace_level_1_init g_backtrace_level_1_init_;
+extern std::atomic_int g_pre_defined_level;
+extern std::atomic_bool g_trim_symbol;
 bool true_false_helper(std::string val);
 
 #endif //BACKTRACE_H
