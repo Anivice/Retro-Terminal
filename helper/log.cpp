@@ -1,4 +1,4 @@
-#include "log.h"
+#include "helper/log.h"
 
 std::mutex debug::log_mutex;
 char debug::split = 0;

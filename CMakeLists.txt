@@ -79,15 +79,15 @@ endif ()
 add_compile_definitions(VERSION="0.0.1")
 add_executable(lfs
         main.cpp
-        log.cpp         include/log.h
-        include/cpp_assert.h
-        backtrace.cpp   include/backtrace.h
-        execute.cpp     include/execute.h
-        include/err_type.h
-        color.cpp       include/color.h
-        get_env.cpp     include/get_env.h
-        arg_parser.cpp  include/arg_parser.h
-        configuration.cpp include/configuration.h
+        helper/log.cpp                  include/helper/log.h
+        include/helper/cpp_assert.h
+        helper/backtrace.cpp            include/helper/backtrace.h
+        helper/execute.cpp              include/helper/execute.h
+        include/helper/err_type.h
+        helper/color.cpp                include/helper/color.h
+        helper/get_env.cpp              include/helper/get_env.h
+        helper/arg_parser.cpp           include/helper/arg_parser.h
+        helper/configuration.cpp        include/helper/configuration.h
 )
 target_include_directories(lfs PRIVATE ${CMAKE_SOURCE_DIR}/include)
 

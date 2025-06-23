@@ -1,8 +1,8 @@
-#include "log.h"
-#include "arg_parser.h"
-#include "color.h"
-#include "configuration.h"
-#include "cpp_assert.h"
+#include "helper/log.h"
+#include "helper/arg_parser.h"
+#include "helper/color.h"
+#include "helper/configuration.h"
+#include "helper/cpp_assert.h"
 #include <atomic>
 #include <algorithm>
 
