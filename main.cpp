@@ -85,7 +85,7 @@ int main(int argc, char **argv)
             {
                 for (const auto & [key, value] : vector)
                 {
-                    debug_log(section, ".", key, " = ", value, "\n");
+                    debug_log(section, "::", key, "=", value, "\n");
                 }
             }
         }

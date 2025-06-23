@@ -7,7 +7,7 @@
 
 class configuration {
 public:
-    using configuration_map_t = std::map < std::string /* Section */, std::vector < std::pair < std::string /* Key */, std::string /* Value */ > > >;
+    using configuration_map_t = std::map < std::string /* Section */, std::map < std::string /* Key */, std::vector < std::string > /* Values */ > >;
     using iterator = configuration_map_t::iterator;
     using const_iterator = configuration_map_t::const_iterator;
     iterator begin() { return config_.begin(); }
