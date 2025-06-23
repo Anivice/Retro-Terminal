@@ -1,11 +1,12 @@
 #include "log.h"
-#include "file.h"
 #include "arg_parser.h"
 #include "color.h"
+#include "configuration.h"
 
 const arg_parser::parameter_vector Arguments = {
     { .name = "help", .short_name = 'h', .arg_required = false, .description = "Prints this help message" },
     { .name = "version", .short_name = 'v', .arg_required = false, .description = "Prints version" },
+    { .name = "config", .short_name = 'c', .arg_required = true, .description = "Path to config file" }
 };
 
 void print_help(const std::string & program_name)
@@ -15,8 +16,9 @@ void print_help(const std::string & program_name)
     const std::string required_str = " arg";
     for (const auto & [name, short_name, arg_required, description] : Arguments)
     {
-        std::string name_str = "--" + name
-            += (short_name == '\0' ? "" : ",-" + std::string(1, short_name))
+        std::string name_str =
+            (short_name == '\0' ? "" : "-" + std::string(1, short_name))
+            += ",--" + name
             += (arg_required ? required_str : "");
 
         if (max_name_len < name_str.size())
@@ -55,6 +57,11 @@ int main(int argc, char **argv)
             return false;
         };
 
+        for (const auto & [arg, val] : args)
+        {
+            debug_log(arg, " ", val, "\n");
+        }
+
         std::string arg_val;
         if (contains("help", arg_val)) // GNU compliance, help must be processed first if it appears and ignore all other arguments
         {
@@ -68,6 +75,19 @@ int main(int argc, char **argv)
                     << color(0,3,3) << " version " << color(0,5,5) << VERSION
                     << no_color() << std::endl;
             return EXIT_SUCCESS;
+        }
+
+        std::unique_ptr < configuration > config;
+        if (contains("config", arg_val))
+        {
+            config = std::make_unique < configuration >(arg_val);
+            for (const auto & [section, vector] : *config)
+            {
+                for (const auto & [key, value] : vector)
+                {
+                    debug_log(section, ".", key, " = ", value, "\n");
+                }
+            }
         }
     }
     catch (const std::exception & e)

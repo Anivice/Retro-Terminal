@@ -78,7 +78,6 @@ add_compile_definitions(VERSION="0.0.1")
 add_executable(lfs
         main.cpp
         log.cpp         include/log.h
-        file.cpp        include/file.h
         include/cpp_assert.h
         backtrace.cpp   include/backtrace.h
         execute.cpp     include/execute.h
@@ -86,6 +85,7 @@ add_executable(lfs
         color.cpp       include/color.h
         get_env.cpp     include/get_env.h
         arg_parser.cpp  include/arg_parser.h
+        configuration.cpp include/configuration.h
 )
 target_include_directories(lfs PRIVATE ${CMAKE_SOURCE_DIR}/include)
 

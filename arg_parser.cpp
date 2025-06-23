@@ -1,5 +1,6 @@
 #include "arg_parser.h"
 #include <algorithm>
+#include <map>
 #include <stdexcept>
 #include "err_type.h"
 #include "include/cpp_assert.h"
@@ -62,20 +63,28 @@ arg_parser::arg_parser(const int argc, char ** argv, const parameter_vector & pa
 
     std::string current_arg;
     std::vector<std::string> bare;
+    std::map <std::string, std::string> non_bare_args;
     for (int i = 1; i < argc; ++i)
     {
         if (const std::string arg = argv[i];
             is_param(arg) && bare.empty())
         {
-            const char short_name = get_short_name(arg);
-            const std::string long_name = get_long_name(arg);
-            const std::string name = short_name != '\0' ? std::string(1, short_name) : long_name;
-            assert_throw(contains(name), "Unknown parameter: " + arg);
-            const auto param_info = find(name);
-            if (param_info.arg_required) {
-                current_arg = param_info.name;
-            } else {
-                args.emplace_back(param_info.name, "");
+            if (current_arg.empty())
+            {
+                const char short_name = get_short_name(arg);
+                const std::string long_name = get_long_name(arg);
+                const std::string name = short_name != '\0' ? std::string(1, short_name) : long_name;
+                assert_throw(contains(name), "Unknown parameter: " + arg);
+                const auto param_info = find(name);
+                if (param_info.arg_required) {
+                    current_arg = param_info.name;
+                } else {
+                    non_bare_args.emplace(param_info.name, "");
+                }
+            }
+            else
+            {
+                throw runtime_error("Parameter `" + current_arg + "` needs an argument");
             }
         }
         else if (current_arg.empty())
@@ -84,9 +93,19 @@ arg_parser::arg_parser(const int argc, char ** argv, const parameter_vector & pa
         }
         else
         {
-            args.emplace_back(current_arg, arg);
+            non_bare_args.emplace(current_arg, arg);
             current_arg.clear();
         }
+    }
+
+    if (!current_arg.empty() && find(current_arg).arg_required)
+    {
+        throw runtime_error("Parameter `" + current_arg + "` needs an argument");
+    }
+
+    for (const auto & [name, value] : non_bare_args)
+    {
+        args.emplace_back(name, value);
     }
 
     for (const auto & arg : bare)

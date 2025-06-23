@@ -12,8 +12,11 @@ public:
     explicit runtime_error(const std::string& what_arg) : std::runtime_error(what_arg)
     {
         additional = color(5,0,0) + what_arg + no_color();
-        additional += "\n";
-        additional += backtrace();
+        if (const std::string bt = backtrace(); !bt.empty())
+        {
+            additional += "\n";
+            additional += bt;
+        }
     }
 
     [[nodiscard]] const char* what() const noexcept override
