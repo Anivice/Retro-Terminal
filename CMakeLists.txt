@@ -74,10 +74,7 @@ if ("X${CMAKE_BUILD_TYPE}" STREQUAL "XDebug")
     add_link_options(${linker_options})
 endif ()
 
-execute_process(COMMAND date
-        OUTPUT_VARIABLE BUILD_DATE)
-
-add_compile_definitions(VERSION="0.0.1" BUILD_DATE="${BUILD_DATE}")
+add_compile_definitions(VERSION="0.0.1")
 add_executable(lfs
         main.cpp
         log.cpp         include/log.h

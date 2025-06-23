@@ -41,24 +41,33 @@ int main(int argc, char **argv)
 {
     try
     {
-        // first, iterate through helpers
-        for (arg_parser args(argc, argv, Arguments);
-            const auto & [arg, val] : args)
+        arg_parser args(argc, argv, Arguments);
+        auto contains = [&args](const std::string & name, std::string & val)->bool
         {
-            if (arg == "help")
+            const auto it = std::ranges::find_if(args,
+                [&name](const std::pair<std::string, std::string> & p)->bool{ return p.first == name; });
+            if (it != args.end())
             {
-                print_help(argv[0]);
-                return EXIT_SUCCESS;
+                val = it->second;
+                return true;
             }
 
-            if (arg == "version")
-            {
-                std::cout << color(5,5,5) << argv[0] << no_color()
-                          << color(0,3,3) << " version " << color(0,5,5) << VERSION
-                          << color(3,0,3) << " built on " << color(5,0,5) << BUILD_DATE
-                          << no_color() << std::endl;
-                return EXIT_SUCCESS;
-            }
+            return false;
+        };
+
+        std::string arg_val;
+        if (contains("help", arg_val)) // GNU compliance, help must be processed first if it appears and ignore all other arguments
+        {
+            print_help(argv[0]);
+            return EXIT_SUCCESS;
+        }
+
+        if (contains("version", arg_val))
+        {
+            std::cout << color(5,5,5) << argv[0] << no_color()
+                    << color(0,3,3) << " version " << color(0,5,5) << VERSION
+                    << no_color() << std::endl;
+            return EXIT_SUCCESS;
         }
     }
     catch (const std::exception & e)
