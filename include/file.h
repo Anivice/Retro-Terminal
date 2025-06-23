@@ -1,6 +1,7 @@
 #ifndef FILE_H
 #define FILE_H
 
+#include <cstdint>
 #include <string>
 
 class file
@@ -14,8 +15,10 @@ public:
     void open_rw(const std::string & path);
     void read(void * buffer, size_t location, size_t size) const;
     void write(const void * buffer, size_t location, size_t size);
-    explicit file(const std::string & path, int mode) { open(path, mode); }
+    explicit file(const std::string & path, const int mode) { open(path, mode); }
     explicit file(const std::string & path) { open_rw(path); }
+    void flush() const;
+    [[nodiscard]] uint64_t get_size() const;
 
     ~file();
     file() = default;

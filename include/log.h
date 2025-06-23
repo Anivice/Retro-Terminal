@@ -246,11 +246,17 @@ namespace debug {
         {
             const char * parameter = arr + strlen(parameter_prefix);
             const char * param_split = "split";
+            const char * no_split = "nosplit";
             if (strlen(parameter) >= strlen(param_split) + 1 /* = */ + 1 /* ' */ + 1 /* split char */ + 1 /* ' */
                 && !memcmp(parameter, param_split, strlen(param_split)))
             {
                 const char * value = parameter + strlen(param_split) + 1 /* = */ + 1 /* ' */;
                 split = *value;
+            }
+            else if (strlen(parameter) >= strlen(no_split)
+                && !memcmp(parameter, no_split, strlen(no_split)))
+            {
+                split = 0;
             }
         }
         else

@@ -3,6 +3,7 @@
 
 #include <stdexcept>
 #include "backtrace.h"
+#include "color.h"
 
 class runtime_error final : public std::runtime_error
 {
@@ -10,7 +11,7 @@ class runtime_error final : public std::runtime_error
 public:
     explicit runtime_error(const std::string& what_arg) : std::runtime_error(what_arg)
     {
-        additional = what_arg;
+        additional = color(5,0,0) + what_arg + no_color();
         additional += "\n";
         additional += backtrace();
     }

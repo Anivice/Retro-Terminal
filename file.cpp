@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include "cpp_assert.h"
 #include <cerrno>
+#include <sys/stat.h>
 
 void file::close() const
 {
@@ -45,6 +46,21 @@ void file::write(const void * buffer, const size_t location, const size_t size)
         throw runtime_error("file::read(): " + std::string(strerror(errno)));
     }
     assert_throw(::write(fd, buffer, size) == size, std::string("file::write(): " + std::string(strerror(errno))));
+}
+
+void file::flush() const
+{
+    ::fsync(fd);
+}
+
+uint64_t file::get_size() const
+{
+    struct stat st{};
+    if (::fstat(fd, &st) == -1)
+    {
+        throw runtime_error("file::get_size(): " + std::string(strerror(errno)));
+    }
+    return st.st_size;
 }
 
 file::~file()

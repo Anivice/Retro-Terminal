@@ -104,6 +104,7 @@ public:
     }
 } backtrace_level_1_init_;
 
+// fast backtrace
 std::string backtrace_level_1()
 {
     if (backtrace_level_1_init_.symbol_vector.empty())
@@ -146,9 +147,9 @@ std::string backtrace_level_1()
             symbol_name = symbol_in_map;
         }
 
-        ss  << color(0,4,1) << "Frame " << color(5,0,0) << "#" << i++ << " "
+        ss  << color(0,4,1) << "Frame " << color(5,2,1) << "#" << i++ << " "
             << std::hex << color(2,4,5) << frame
-            << ": " << color(1,5,5) << trim_sym(symbol_name) << no_color << "\n";
+            << ": " << color(1,5,5) << trim_sym(symbol_name) << no_color() << "\n";
     }
 
     return ss.str();
@@ -174,6 +175,7 @@ std::string replace_all(
     return original;
 }
 
+// slow backtrace, with better trace info
 std::string backtrace_level_2(const std::vector<std::string> & excluded_file_list)
 {
     std:: stringstream ss;
@@ -253,11 +255,11 @@ std::string backtrace_level_2(const std::vector<std::string> & excluded_file_lis
                 }
             }
 
-            ss  << color(0,4,1) << "Frame " << color(5,0,0) << "#" << i++ << " "
+            ss  << color(0,4,1) << "Frame " << color(5,2,1) << "#" << i++ << " "
                 << std::hex << color(2,4,5) << frame
-                << ": " << color(1,5,5) << info.name << no_color << "\n";
+                << ": " << color(1,5,5) << info.name << no_color() << "\n";
             if (!info.file.empty())
-                ss << "          " << color(0,1,5) << info.file << no_color << "\n";
+                ss << "          " << color(0,1,5) << info.file << no_color() << "\n";
         } else {
             ss << "No trace information for " << std::hex << frame << "\n";
         }

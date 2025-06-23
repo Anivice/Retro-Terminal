@@ -1,14 +1,47 @@
 #include <string>
 #include "get_env.h"
 #include "color.h"
+#include <algorithm>
+#include <sys/stat.h>
+#include <unistd.h>
+#include "cpp_assert.h"
 
-std::atomic < const char * > no_color = "\033[0m";
+bool is_no_color()
+{
+    auto color_env = get_env(COLOR);
+    std::ranges::transform(color_env, color_env.begin(), ::tolower);
+
+    if (color_env == "always")
+    {
+        return false;
+    }
+
+    const bool no_color_from_env = color_env == "never" || color_env == "none" || color_env == "off"
+                            || color_env == "no" || color_env == "n" || color_env == "0" || color_env == "false";
+    bool is_terminal = false;
+    struct stat st{};
+    assert_short(fstat(STDOUT_FILENO, &st) != -1);
+    if (isatty(STDOUT_FILENO))
+    {
+        is_terminal = true;
+    }
+
+    return no_color_from_env || !is_terminal;
+}
+
+std::string no_color()
+{
+    if (!is_no_color())
+    {
+        return "\033[0m";
+    }
+
+    return "";
+}
 
 std::string color(const int r, const int g, const int b, const int br, const int bg, const int bb)
 {
-    if (const auto color_env = get_env(COLOR);
-        color_env == "never" || color_env == "none" ||
-        color_env == "off" || color_env == "no" || color_env == "n")
+    if (is_no_color())
     {
         return "";
     }
@@ -18,9 +51,7 @@ std::string color(const int r, const int g, const int b, const int br, const int
 
 std::string color(int r, int g, int b)
 {
-    if (const auto color_env = get_env(COLOR);
-        color_env == "never" || color_env == "none" ||
-        color_env == "off" || color_env == "no" || color_env == "n")
+    if (is_no_color())
     {
         return "";
     }
@@ -42,9 +73,7 @@ std::string color(int r, int g, int b)
 
 std::string bg_color(int r, int g, int b)
 {
-    if (const auto color_env = get_env(COLOR);
-    color_env == "never" || color_env == "none" ||
-    color_env == "off" || color_env == "no" || color_env == "n")
+    if (is_no_color())
     {
         return "";
     }
