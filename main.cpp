@@ -2,6 +2,11 @@
 #include "arg_parser.h"
 #include "color.h"
 #include "configuration.h"
+#include "cpp_assert.h"
+#include <atomic>
+#include <algorithm>
+
+std::atomic_bool g_verbose{false};
 
 const arg_parser::parameter_vector Arguments = {
     { .name = "help", .short_name = 'h', .arg_required = false, .description = "Prints this help message" },
@@ -36,6 +41,45 @@ void print_help(const std::string & program_name)
         std::cout << "    " << color(1,5,4) << name << no_color()
                   << std::string(max_name_len + 4 - name.size(), ' ')
                   << color(4,5,1) << description << no_color() << std::endl;
+    }
+}
+
+#define assert_one_value(value, key) (assert_throw((value).size() == 1, "Multiple definition or simply lack of a valid definition for `" key "`"))
+
+void debug_section_config(const std::map < std::string, std::vector<std::string> > & key_pairs)
+{
+    for (const auto & [key, value] : key_pairs)
+    {
+        if (key == "symbol_table")
+        {
+            assert_one_value(value, "symbol_table");
+            if (backtrace_level_1_init_.symbol_vector.empty()) {
+                backtrace_level_1_init_.initialize(value.front().c_str());
+            }
+
+            if (DEBUG) debug_log("Symbol table loaded from file ", value.front(), "\n");
+        } else if (key == "backtrace_level") {
+            pre_defined_level = static_cast<int>(std::strtol(value.front().c_str(), nullptr, 10));
+        } else if (key == "verbose") {
+            g_verbose = true_false_helper(value.front());
+            if (g_verbose) { debug_log("Verbose mode enabled\n"); }
+        } else if (key == "trim_symbol") {
+            trim_symbol = true_false_helper(value.front());
+        } else {
+            if (DEBUG) debug_log(color(5, 5, 0), "WARNING: `", key, "` is not a valid key name, ignored\n", no_color());
+        }
+    }
+}
+
+#undef assert_one_value
+
+void process_config(const configuration & config)
+{
+    for (const auto & [section, vector] : config)
+    {
+        if (section == "debug") {
+            debug_section_config(vector);
+        }
     }
 }
 
@@ -77,18 +121,12 @@ int main(int argc, char **argv)
             return EXIT_SUCCESS;
         }
 
-        std::unique_ptr < configuration > config;
         if (contains("config", arg_val))
         {
-            config = std::make_unique < configuration >(arg_val);
-            for (const auto & [section, vector] : *config)
-            {
-                for (const auto & [key, value] : vector)
-                {
-                    debug_log(section, "::", key, "=", value, "\n");
-                }
-            }
+            process_config(configuration(arg_val));
         }
+
+        assert_short(false);
     }
     catch (const std::exception & e)
     {

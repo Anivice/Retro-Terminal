@@ -281,7 +281,7 @@ namespace debug {
         (_log(args), ...);
     }
 
-#if DEBUG
+#ifndef __NO_CALLER__
     extern bool do_i_show_caller_next_time;
 
     template < typename StringType >
@@ -338,7 +338,7 @@ namespace debug {
     }
 }
 
-#if DEBUG
+#ifndef __NO_CALLER__
 #   include <source_location>
     inline std::string strip_name(const std::string & name)
     {

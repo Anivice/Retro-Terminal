@@ -11,8 +11,8 @@ inline void assert_throw(const bool condition, const std::string & message)
     }
 }
 
-#define _str(x) #x
-#define str(x) _str(x)
-#define assert_short(condition) assert_throw(condition, __FILE__ ":" str(__LINE__) ": " #condition)
+#define _line_str(x) #x
+#define line_str(x) _line_str(x)
+#define assert_short(condition) assert_throw(condition, __FILE__ ":" line_str(__LINE__) ": " #condition)
 
 #endif //CPP_ASSERT_H

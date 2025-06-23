@@ -43,66 +43,113 @@ backtrace_info obtain_stack_frame()
     return result;
 }
 
-int main(int, char**);
-
-class backtrace_level_1_init
+extern "C" void landmark(void)
 {
-public:
-    std::vector<std::pair<uint64_t, std::string>> symbol_vector{};
-    backtrace_level_1_init()
+    __asm__ __volatile__("nop");
+    __asm__ __volatile__("nop");
+    __asm__ __volatile__("nop");
+    __asm__ __volatile__("nop");
+}
+
+void backtrace_level_1_init::initialize(const char * path)
+{
+    void *handle = dlopen(path, RTLD_LAZY);
+    if (!handle)
     {
-        const auto sym_map_lib = get_env("SYMMAP");
-        if (sym_map_lib.empty())
-        {
-            return;
-        }
-        void *handle = dlopen(sym_map_lib.c_str(), RTLD_LAZY);
-        if (!handle)
-        {
-            return;
-        }
+        return;
+    }
 
-        auto * sym_map_len = static_cast<unsigned int*>(dlsym(handle, "sym_map_len"));
-        auto * sym_map = static_cast<unsigned char*>(dlsym(handle, "sym_map"));
+    auto * sym_map_len = static_cast<unsigned int*>(dlsym(handle, "sym_map_len"));
+    auto * sym_map = static_cast<unsigned char*>(dlsym(handle, "sym_map"));
 
-        std::vector<char> sym_map_data;
-        sym_map_data.resize(*sym_map_len + 1);
-        std::memcpy(sym_map_data.data(), sym_map, *sym_map_len);
-        sym_map_data[*sym_map_len] = 0;
-        const std::string sym_map_str(sym_map_data.data());
-        std::stringstream ss(sym_map_str);
-        uint64_t main_addr = 0;
-        while (ss)
+    std::vector<char> sym_map_data;
+    sym_map_data.resize(*sym_map_len + 1);
+    std::memcpy(sym_map_data.data(), sym_map, *sym_map_len);
+    sym_map_data[*sym_map_len] = 0;
+    const std::string sym_map_str(sym_map_data.data());
+    std::stringstream ss(sym_map_str);
+    uint64_t landmark_addr = 0;
+    while (ss)
+    {
+        std::string hex_addr, symbol;
+        ss >> hex_addr >> symbol;
+        if (hex_addr.empty() || symbol.empty())
         {
-            std::string hex_addr, symbol;
-            ss >> hex_addr >> symbol;
-            if (hex_addr.empty() || symbol.empty())
-            {
-                break;
-            }
-
-            symbol_vector.emplace_back(std::make_pair<uint64_t, std::string>(
-                std::stoul(hex_addr, nullptr, 16),
-                demangle(symbol.c_str())));
-            if (symbol == "main")
-            {
-                main_addr = std::stoul(hex_addr, nullptr, 16);
-            }
+            break;
         }
 
-        std::ranges::sort(symbol_vector,
-                          [](const std::pair<uint64_t, std::string> & a, const std::pair<uint64_t, std::string> & b)->bool
-                          {
-                              return a.first < b.first;
-                          });
-
-        const int64_t offset = (uint64_t)(void*)main - main_addr;
-        for (auto& addr : symbol_vector | std::views::keys)
+        symbol_vector.emplace_back(std::make_pair<uint64_t, std::string>(
+            std::stoul(hex_addr, nullptr, 16),
+            demangle(symbol.c_str())));
+        if (symbol == "landmark")
         {
-            addr += offset;
+            landmark_addr = std::stoul(hex_addr, nullptr, 16);
         }
     }
-} backtrace_level_1_init_;
+
+    std::ranges::sort(symbol_vector,
+                      [](const std::pair<uint64_t, std::string> & a, const std::pair<uint64_t, std::string> & b)->bool
+                      {
+                          return a.first < b.first;
+                      });
+
+    const int64_t offset = (uint64_t)(void*)landmark - landmark_addr;
+    for (auto& addr : symbol_vector | std::views::keys)
+    {
+        addr += offset;
+    }
+}
+
+backtrace_level_1_init::backtrace_level_1_init()
+{
+    const auto sym_map_lib = get_env("SYMMAP");
+    if (sym_map_lib.empty())
+    {
+        return;
+    }
+
+    initialize(sym_map_lib.c_str());
+}
+
+backtrace_level_1_init backtrace_level_1_init_;
+std::atomic_bool trim_symbol = false;
+
+std::string replace_all(
+    std::string & original,
+    const std::string & target,
+    const std::string & replacement)
+{
+    if (target.empty()) return original; // Avoid infinite loop if target is empty
+
+    if (target.size() == 1 && replacement.empty()) {
+        std::erase_if(original, [&target](const char c) { return c == target[0]; });
+        return original;
+    }
+
+    size_t pos = 0;
+    while ((pos = original.find(target, pos)) != std::string::npos) {
+        original.replace(pos, target.length(), replacement);
+        pos += replacement.length(); // Move past the replacement to avoid infinite loop
+    }
+    return original;
+}
+
+bool trim_symbol_yes()
+{
+    return get_env("TRIM_SYMBOL").empty() ? trim_symbol.load() : true_false_helper(get_env("TRIM_SYMBOL"));
+}
+
+bool true_false_helper(std::string val)
+{
+    std::ranges::transform(val, val.begin(), ::tolower);
+    if (val == "true") {
+        return true;
+    } else if (val == "false") {
+        return false;
+    } else {
+        return std::stoi(val) != 0;
+    }
+}
 
 // fast backtrace
 std::string backtrace_level_1()
@@ -114,21 +161,14 @@ std::string backtrace_level_1()
     std::stringstream ss;
     const backtrace_info frames = obtain_stack_frame();
     int i = 0;
-    bool trim = get_env("TRIM_SYMBOL") == "True";
-    constexpr uint64_t max_symbol_length = 64;
-    constexpr float max_symbol_ratio = 0.65;
-    constexpr uint64_t symbol_trim_first_length = max_symbol_length * max_symbol_ratio;
-    constexpr uint64_t symbol_trim_second_length = max_symbol_length - symbol_trim_first_length - 3;
-    auto trim_sym = [&trim](const std::string & name)->std::string
+    auto trim_sym = [](std::string name)->std::string
     {
-        if (trim)
+        if (trim_symbol_yes())
         {
-            if (name.size() > max_symbol_length)
-            {
-                const std::string first = name.substr(0, symbol_trim_first_length);
-                const std::string second = name.substr(name.size() - symbol_trim_second_length);
-                return first + "..." + second;
-            }
+            name = std::regex_replace(name, std::regex(R"(\(.*\))"), "");
+            name = std::regex_replace(name, std::regex(R"(\[abi\:.*\])"), "");
+            name = std::regex_replace(name, std::regex(R"(std\:\:.*\:\:)"), "");
+            return name;
         }
 
         return name;
@@ -155,26 +195,6 @@ std::string backtrace_level_1()
     return ss.str();
 }
 
-std::string replace_all(
-    std::string & original,
-    const std::string & target,
-    const std::string & replacement)
-{
-    if (target.empty()) return original; // Avoid infinite loop if target is empty
-
-    if (target.size() == 1 && replacement.empty()) {
-        std::erase_if(original, [&target](const char c) { return c == target[0]; });
-        return original;
-    }
-
-    size_t pos = 0;
-    while ((pos = original.find(target, pos)) != std::string::npos) {
-        original.replace(pos, target.length(), replacement);
-        pos += replacement.length(); // Move past the replacement to avoid infinite loop
-    }
-    return original;
-}
-
 // slow backtrace, with better trace info
 std::string backtrace_level_2(const std::vector<std::string> & excluded_file_list)
 {
@@ -190,8 +210,7 @@ std::string backtrace_level_2(const std::vector<std::string> & excluded_file_lis
         std::string file;
     };
 
-    bool trim = get_env("TRIM_SYMBOL") == "True";
-    auto generate_addr2line_trace_info = [&trim](const std::string & executable_path, const std::string& address)->traced_info
+    auto generate_addr2line_trace_info = [](const std::string & executable_path, const std::string& address)->traced_info
     {
         auto [fd_stdout, fd_stderr, exit_status]
             = exec_command("/usr/bin/addr2line", "", "--demangle", "-f", "-p", "-a", "-e",
@@ -208,7 +227,7 @@ std::string backtrace_level_2(const std::vector<std::string> & excluded_file_lis
             path = fd_stdout.substr(pos);
         }
 
-        if (trim)
+        if (trim_symbol_yes())
         {
             if (const size_t pos2 = caller.find('('); pos2 != std::string::npos) {
                 caller = caller.substr(0, pos2);
@@ -268,9 +287,11 @@ std::string backtrace_level_2(const std::vector<std::string> & excluded_file_lis
     return ss.str();
 }
 
+std::atomic_int pre_defined_level = -1;
+
 std::string backtrace()
 {
-    switch (const auto level = get_variable<int>(BACKTRACE_LEVEL))
+    switch (/* const auto level = */get_env(BACKTRACE_LEVEL).empty() ? pre_defined_level.load() : get_variable<int>(BACKTRACE_LEVEL))
     {
         case 1: return backtrace_level_1();
         case 2: return backtrace_level_2({"backtrace.cpp", "err_type.h"});

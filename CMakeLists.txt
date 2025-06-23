@@ -72,6 +72,8 @@ if ("X${CMAKE_BUILD_TYPE}" STREQUAL "XDebug")
     endif ()
     add_compile_options(${compiler_options})
     add_link_options(${linker_options})
+else ()
+    add_compile_definitions(DEBUG=0)
 endif ()
 
 add_compile_definitions(VERSION="0.0.1")

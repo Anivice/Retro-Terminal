@@ -1,8 +1,9 @@
 #include "configuration.h"
+#include "get_env.h"
+#include <filesystem>
 #include <fstream>
 #include <regex>
-
-#include "include/err_type.h"
+#include "err_type.h"
 
 std::string clean_line(const std::string& line)
 {
@@ -35,6 +36,29 @@ std::pair <std::string, std::string> get_pair(const std::string& line)
     return pair;
 }
 
+std::string replace_all(std::string & original, const std::string & target, const std::string & replacement);
+std::string process_value(std::string value)
+{
+    std::map < std::string, std::string > replace_list;
+    const std::regex pattern(R"(\%[\w]+\%)");
+    const auto matches_begin = std::sregex_iterator(begin(value), end(value), pattern);
+    const auto matches_end = std::sregex_iterator();
+    for (std::sregex_iterator i = matches_begin; i != matches_end; ++i)
+    {
+        const auto match = i->str();
+        auto env_key = i->str();
+        replace_all(env_key, "%", "");
+        replace_list[match] = get_env(env_key);
+    }
+
+    for (const auto & [key, env] : replace_list)
+    {
+        replace_all(value, key, env);
+    }
+
+    return value;
+}
+
 configuration::configuration(const std::string& path)
 {
     std::ifstream file(path);
@@ -61,7 +85,7 @@ configuration::configuration(const std::string& path)
                 if (section.empty()) {
                     throw runtime_error("Line: " + std::to_string(line_num) + ": section head is empty");
                 }
-                config_[section][key].push_back(value);
+                config_[section][key].push_back(process_value(value));
             }
         }
     }
