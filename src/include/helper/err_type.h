@@ -17,6 +17,10 @@ public:
             additional += "\n";
             additional += bt;
         }
+        else
+        {
+            additional += color(2,2,0) + "\nSet BACKTRACE_LEVEL=1 or 2 to see detailed backtrace information\n" + no_color();
+        }
     }
 
     [[nodiscard]] const char* what() const noexcept override

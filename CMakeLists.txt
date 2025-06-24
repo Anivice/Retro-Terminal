@@ -78,29 +78,29 @@ endif ()
 
 add_compile_definitions(VERSION="0.0.1")
 add_library(lfs SHARED
-        helper/log.cpp                  include/helper/log.h
-        include/helper/cpp_assert.h
-        helper/backtrace.cpp            include/helper/backtrace.h
-        helper/execute.cpp              include/helper/execute.h
-        include/helper/err_type.h
-        helper/color.cpp                include/helper/color.h
-        helper/get_env.cpp              include/helper/get_env.h
-        helper/arg_parser.cpp           include/helper/arg_parser.h
-        helper/configuration.cpp        include/helper/configuration.h
-        helper/socket.cpp               include/helper/socket.h
-        helper/file.cpp                 include/helper/file.h
-        core/directory.cpp              include/core/directory.h
-        core/file.cpp                   include/core/file.h
-        core/cache.cpp                  include/core/cache.h
-        core/basic_file_ops.cpp         include/core/basic_file_ops.h
-        include/helper/WorkerThread.h
+        src/helper/log.cpp           src/include/helper/log.h
+        src/include/helper/cpp_assert.h
+        src/helper/backtrace.cpp     src/include/helper/backtrace.h
+        src/helper/execute.cpp       src/include/helper/execute.h
+        src/include/helper/err_type.h
+        src/helper/color.cpp         src/include/helper/color.h
+        src/helper/get_env.cpp       src/include/helper/get_env.h
+        src/helper/arg_parser.cpp    src/include/helper/arg_parser.h
+        src/helper/configuration.cpp src/include/helper/configuration.h
+        src/helper/socket.cpp        src/include/helper/socket.h
+        src/helper/file.cpp          src/include/helper/file.h
+        src/core/directory.cpp       src/include/core/directory.h
+        src/core/file.cpp            src/include/core/file.h
+        src/core/cache.cpp           src/include/core/cache.h
+        src/core/basic_file_ops.cpp  src/include/core/basic_file_ops.h
+        src/include/helper/WorkerThread.h
 )
-target_include_directories(lfs PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(lfs PRIVATE src/include)
 
-add_executable(server server/main.cpp)
-target_include_directories(server PRIVATE include)
+add_executable(server src/server/main.cpp)
+target_include_directories(server PRIVATE src/include)
 target_link_libraries(server PRIVATE lfs)
 
-add_executable(client client/main.cpp)
-target_include_directories(client PRIVATE include)
+add_executable(client src/client/main.cpp)
+target_include_directories(client PRIVATE src/include)
 target_link_libraries(client PRIVATE lfs)

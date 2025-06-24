@@ -7,12 +7,6 @@
 
 arg_parser::arg_parser(const int argc, char ** argv, const parameter_vector & parameters)
 {
-    // sanity check
-    for (const auto & p : parameters)
-    {
-        assert_short(!p.name.empty());
-    }
-
     auto contains = [&parameters](const std::string & name)->bool
     {
         return std::ranges::any_of(parameters, [&name](const parameter_t & p)->bool
@@ -60,6 +54,21 @@ arg_parser::arg_parser(const int argc, char ** argv, const parameter_vector & pa
 
         return *it;
     };
+
+    // sanity check
+    std::vector < std::string > dup1;
+    std::vector < char > dup2;
+    dup1.reserve(parameters.size());
+    dup2.reserve(parameters.size());
+    for (const auto & p : parameters)
+    {
+        assert_throw(!p.name.empty(), "Full name cannot be empty");
+        assert_throw(std::ranges::find(dup1, p.name) == std::ranges::end(dup1), "Duplicated argument in initialization list");
+        dup1.push_back(p.name);
+        assert_throw(p.short_name == 0 ? true : (std::ranges::find(dup2, p.short_name) == std::ranges::end(dup2)),
+            "Duplicated short name in initialization list");
+        if (p.short_name != 0) dup2.push_back(p.short_name);
+    }
 
     std::string current_arg;
     std::vector<std::string> bare;

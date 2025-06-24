@@ -10,9 +10,10 @@
 std::atomic_bool g_verbose{false};
 
 const arg_parser::parameter_vector Arguments = {
-    { .name = "help", .short_name = 'h', .arg_required = false, .description = "Prints this help message" },
-    { .name = "version", .short_name = 'v', .arg_required = false, .description = "Prints version" },
-    { .name = "config", .short_name = 'c', .arg_required = true, .description = "Path to config file" }
+    { .name = "help",       .short_name = 'h', .arg_required = false,   .description = "Prints this help message" },
+    { .name = "version",    .short_name = 'v', .arg_required = false,   .description = "Prints version" },
+    { .name = "config",     .short_name = 'c', .arg_required = true,    .description = "Path to config file" },
+    { .name = "verbose",    .short_name = 'v', .arg_required = false,   .description = "Enable verbose output" },
 };
 
 void print_help(const std::string & program_name)
@@ -109,11 +110,6 @@ int main(int argc, char **argv)
             return false;
         };
 
-        for (const auto & [arg, val] : args)
-        {
-            debug_log(arg, " ", val, "\n");
-        }
-
         std::string arg_val;
         if (contains("help", arg_val)) // GNU compliance, help must be processed first if it appears and ignore all other arguments
         {
@@ -132,6 +128,13 @@ int main(int argc, char **argv)
         if (contains("config", arg_val))
         {
             process_config(configuration(arg_val));
+        }
+
+        if (contains("verbose", arg_val))
+        {
+            // output if and only if verbose mode is not enabled before, prevent duplicated output
+            if (!g_verbose) debug_log("Verbose mode enabled\n");
+            g_verbose = true;
         }
 
         if (!get_env("VERBOSE").empty())
