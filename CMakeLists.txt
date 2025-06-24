@@ -77,8 +77,7 @@ else ()
 endif ()
 
 add_compile_definitions(VERSION="0.0.1")
-add_executable(lfs
-        main.cpp
+add_library(lfs SHARED
         helper/log.cpp                  include/helper/log.h
         include/helper/cpp_assert.h
         helper/backtrace.cpp            include/helper/backtrace.h
@@ -88,19 +87,20 @@ add_executable(lfs
         helper/get_env.cpp              include/helper/get_env.h
         helper/arg_parser.cpp           include/helper/arg_parser.h
         helper/configuration.cpp        include/helper/configuration.h
+        helper/socket.cpp               include/helper/socket.h
+        helper/file.cpp                 include/helper/file.h
+        core/directory.cpp              include/core/directory.h
+        core/file.cpp                   include/core/file.h
+        core/cache.cpp                  include/core/cache.h
+        core/basic_file_ops.cpp         include/core/basic_file_ops.h
+        include/helper/WorkerThread.h
 )
 target_include_directories(lfs PRIVATE ${CMAKE_SOURCE_DIR}/include)
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(lfs PRIVATE Qt6::GuiPrivate)
 
-add_custom_target(remove_objmap_c
-        COMMAND rm -f ${CMAKE_BINARY_DIR}/objmap.cpp
-        COMMENT "Removing previously generated map"
-)
-add_custom_command(
-        OUTPUT  ${CMAKE_BINARY_DIR}/objmap.cpp
-        DEPENDS lfs remove_objmap_c
-        COMMAND ${CMAKE_SOURCE_DIR}/get_map.sh "${CMAKE_BINARY_DIR}/lfs" > ${CMAKE_BINARY_DIR}/objmap.cpp
-        COMMENT "Generating backtrace map..."
-)
-add_library(lfs_map SHARED ${CMAKE_BINARY_DIR}/objmap.cpp)
+add_executable(server server/main.cpp)
+target_include_directories(server PRIVATE include)
+target_link_libraries(server PRIVATE lfs)
+
+add_executable(client client/main.cpp)
+target_include_directories(client PRIVATE include)
+target_link_libraries(client PRIVATE lfs)

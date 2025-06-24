@@ -1,11 +1,10 @@
+#include <atomic>
+#include <algorithm>
 #include "helper/log.h"
 #include "helper/arg_parser.h"
 #include "helper/color.h"
 #include "helper/configuration.h"
 #include "helper/cpp_assert.h"
-#include <atomic>
-#include <algorithm>
-#include <rhi/qrhi.h>
 #include "helper/get_env.h"
 
 std::atomic_bool g_verbose{false};
@@ -52,15 +51,7 @@ void debug_section_config(const std::map < std::string, std::vector<std::string>
 {
     for (const auto & [key, value] : key_pairs)
     {
-        if (key == "symbol_table")
-        {
-            assert_one_value(value, "symbol_table");
-            if (g_backtrace_level_1_init_.symbol_vector.empty()) {
-                g_backtrace_level_1_init_.initialize(value.front().c_str());
-            }
-
-            debug_log("Symbol table loaded from file ", value.front(), "\n");
-        } else if (key == "backtrace_level") {
+        if (key == "backtrace_level") {
             g_pre_defined_level = static_cast<int>(std::strtol(value.front().c_str(), nullptr, 10));
         } else if (key == "verbose") {
             g_verbose = true_false_helper(value.front());
@@ -81,7 +72,7 @@ void general_section_config(const std::map < std::string, std::vector<std::strin
             assert_one_value(value, "color");
             g_no_color = !true_false_helper(value.front());
         } else {
-            debug_log(color(5, 5, 0), "WARNING: `", key, "` is not a valid key name, ignored\n", no_color());
+            debug_log(color(5, 5, 0), "WARNING: `", key, "` is not a valid key name (", value, "), ignored\n", no_color());
         }
     }
 }

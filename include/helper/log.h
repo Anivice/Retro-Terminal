@@ -28,14 +28,12 @@
 #include <atomic>
 #include <iomanip>
 #include <ranges>
-#if DEBUG
-#   include <vector>
-#   include <tuple>      // for std::tuple, std::make_tuple
-#   include <utility>    // for std::forward
-#   include <any>
-#   include <cstring>
-#   include <regex>
-#endif
+#include <vector>
+#include <tuple>      // for std::tuple, std::make_tuple
+#include <utility>    // for std::forward
+#include <any>
+#include <cstring>
+#include <regex>
 
 #define construct_simple_type_compare(type)                             \
     template <typename T>                                               \

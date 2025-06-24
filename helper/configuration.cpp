@@ -1,9 +1,9 @@
-#include "helper/configuration.h"
-#include "helper/get_env.h"
 #include <filesystem>
 #include <fstream>
 #include <regex>
 #include "helper/err_type.h"
+#include "helper/configuration.h"
+#include "helper/get_env.h"
 
 std::string clean_line(const std::string& line)
 {
@@ -36,27 +36,12 @@ std::pair <std::string, std::string> get_pair(const std::string& line)
     return pair;
 }
 
-std::string replace_all(std::string & original, const std::string & target, const std::string & replacement);
 std::string process_value(std::string value)
 {
-    std::map < std::string, std::string > replace_list;
-    const std::regex pattern(R"(\%[\w]+\%)");
-    const auto matches_begin = std::sregex_iterator(begin(value), end(value), pattern);
-    const auto matches_end = std::sregex_iterator();
-    for (std::sregex_iterator i = matches_begin; i != matches_end; ++i)
-    {
-        const auto match = i->str();
-        auto env_key = i->str();
-        replace_all(env_key, "%", "");
-        replace_list[match] = get_env(env_key);
-    }
-
-    for (const auto & [key, env] : replace_list)
-    {
-        replace_all(value, key, env);
-    }
-
-    return value;
+    return regex_replace_all(value, R"(\%[\w]+\%)", [](const std::string & word)->std::string {
+        std::string result = word;
+        return get_env(replace_all(result, "%", ""));
+    });
 }
 
 configuration::configuration(const std::string& path)

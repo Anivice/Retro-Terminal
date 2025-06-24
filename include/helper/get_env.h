@@ -6,8 +6,12 @@
 #define COLOR "COLOR"
 
 #include <string>
+#include <functional>
 
 std::string get_env(const std::string & name);
+bool true_false_helper(std::string val);
+std::string replace_all(std::string & original, const std::string & target, const std::string & replacement);
+std::string regex_replace_all(std::string & original, const std::string & pattern, const std::function<std::string(const std::string &)>& replacement);
 
 template <typename IntType>
 IntType get_variable(const std::string & name)

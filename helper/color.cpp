@@ -1,11 +1,11 @@
 #include <string>
-#include "helper/get_env.h"
-#include "helper/color.h"
 #include <algorithm>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "helper/cpp_assert.h"
 #include <atomic>
+#include "helper/cpp_assert.h"
+#include "helper/get_env.h"
+#include "helper/color.h"
 
 std::atomic_bool g_no_color = false;
 
