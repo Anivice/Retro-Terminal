@@ -113,8 +113,8 @@ namespace debug {
 
     construct_simple_type_compare(bool);
 
-    inline class clear_line_t {} clear_line;
-    construct_simple_type_compare(clear_line_t);
+    inline class move_front_t {} move_front;
+    construct_simple_type_compare(move_front_t);
 
     inline class cursor_off_t {} cursor_off;
     construct_simple_type_compare(cursor_off_t);
@@ -153,12 +153,12 @@ namespace debug {
     {
         constexpr uint64_t max_elements = 8;
         uint64_t num_elements = 0;
-        std::cerr << "[";
+        _log("[");
         for (auto it = std::begin(container); it != std::end(container); ++it)
         {
             if (num_elements == max_elements)
             {
-                std::cerr << "\n";
+                _log("\n");
                 _log("    ");
                 num_elements = 0;
             }
@@ -166,37 +166,37 @@ namespace debug {
             if (sizeof(*it) == 1 /* 8bit data width */)
             {
                 const auto & tmp = *it;
-                std::cerr << "0x" << std::hex << std::setw(2) << std::setfill('0')
-                        << static_cast<unsigned>((*(uint8_t *)(&tmp)) & 0xFF); // ugly workarounds
+                _log("0x", std::hex, std::setw(2), std::setfill('0'),
+                    static_cast<unsigned>((*(uint8_t *)(&tmp)) & 0xFF)); // ugly workarounds
             }
             else {
                 _log(*it);
             }
 
             if (std::next(it) != std::end(container)) {
-                std::cerr << ", ";
+                _log(", ");
             }
 
             num_elements++;
         }
-        std::cerr << "]";
+        _log("]");
     }
 
 	template <typename Map>
 	requires (debug::is_map_v<Map> || debug::is_unordered_map_v<Map>)
 	void print_container(const Map & map)
     {
-    	std::cerr << "{";
+    	_log("{");
     	for (auto it = std::begin(map); it != std::end(map); ++it)
     	{
     		_log(it->first);
-    		std::cerr << ": ";
+    		_log(": ");
     		_log(it->second);
     		if (std::next(it) != std::end(map)) {
-    			std::cerr << ", ";
+    			_log(", ");
     		}
     	}
-    	std::cerr << "}";
+    	_log("}");
     }
 
     template <typename ParamType> void _log(const ParamType& param)
@@ -218,7 +218,7 @@ namespace debug {
             _log(param.second);
             std::cerr << ">";
         }
-        else if constexpr (debug::is_clear_line_t_v<ParamType>) {
+        else if constexpr (debug::is_move_front_t_v<ParamType>) {
             std::cerr << "\033[F\033[K";
         }
         else if constexpr (debug::is_cursor_off_t_v<ParamType>) {
@@ -233,49 +233,10 @@ namespace debug {
         // NOLINTEND(clang-diagnostic-repeated-branch-body)
     }
 
-    extern char split;
-
-    template <typename T, std::size_t N>
-    void _log(const T (&arr)[N])
-    {
-        const char * parameter_prefix = "log::";
-        if (strlen(arr) >= strlen(parameter_prefix)
-            && !std::memcmp(arr, parameter_prefix, std::min(strlen(arr), strlen(parameter_prefix))))
-        {
-            const char * parameter = arr + strlen(parameter_prefix);
-            const char * param_split = "split";
-            const char * no_split = "nosplit";
-            if (strlen(parameter) >= strlen(param_split) + 1 /* = */ + 1 /* ' */ + 1 /* split char */ + 1 /* ' */
-                && !memcmp(parameter, param_split, strlen(param_split)))
-            {
-                const char * value = parameter + strlen(param_split) + 1 /* = */ + 1 /* ' */;
-                split = *value;
-            }
-            else if (strlen(parameter) >= strlen(no_split)
-                && !memcmp(parameter, no_split, strlen(no_split)))
-            {
-                split = 0;
-            }
-        }
-        else
-        {
-            std::cerr << arr;
-        }
-    }
-
     template <typename ParamType, typename... Args>
     void _log(const ParamType& param, const Args &...args)
     {
-        if (split)
-        {
-            _log(param);
-            std::cerr << split;
-        }
-        else
-        {
-            _log(param);
-        }
-
+        _log(param);
         (_log(args), ...);
     }
 
@@ -336,24 +297,12 @@ namespace debug {
     }
 }
 
-#if DEBUG
 # ifndef __NO_CALLER__
 #   include <source_location>
-    inline std::string strip_name(const std::string & name)
-    {
-        const std::regex pattern(R"([\w]+ (.*)\(.*\))");
-        if (std::smatch matches; std::regex_match(name, matches, pattern) && matches.size() > 1) {
-            return matches[1];
-        }
-
-        return name;
-    }
+    std::string strip_name(const std::string & name);
 #   define debug_log(...) ::debug::log(strip_name(std::source_location::current().function_name()).c_str(), __VA_ARGS__)
 # else
 #   define debug_log(...) ::debug::log(__VA_ARGS__)
 # endif
-#else
-# define debug_log(...) __asm__("nop")
-#endif
 
 #endif // LOG_H
