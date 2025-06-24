@@ -12,7 +12,7 @@ public:
     explicit runtime_error(const std::string& what_arg) : std::runtime_error(what_arg)
     {
         additional = color(5,0,0) + what_arg + no_color();
-        if (const std::string bt = backtrace(); !bt.empty())
+        if (const std::string bt = debug::backtrace(); !bt.empty())
         {
             additional += "\n";
             additional += bt;

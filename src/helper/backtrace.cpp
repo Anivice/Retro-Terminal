@@ -4,7 +4,6 @@
 #include <sstream>
 #include <regex>
 #include <cxxabi.h>
-#include <algorithm>
 #include <ranges>
 #include "helper/backtrace.h"
 #include "helper/color.h"
@@ -14,7 +13,7 @@
 
 #define MAX_STACK_FRAMES (64)
 
-std::string demangle(const char* mangled)
+std::string debug::demangle(const char* mangled)
 {
     int status = 0;
     char* dem = abi::__cxa_demangle(mangled, nullptr, nullptr, &status);
@@ -43,11 +42,11 @@ backtrace_info obtain_stack_frame()
     return result;
 }
 
-std::atomic_bool g_trim_symbol = false;
+std::atomic_bool debug::g_trim_symbol = false;
 
 bool trim_symbol_yes()
 {
-    return get_env("TRIM_SYMBOL").empty() ? g_trim_symbol.load() : true_false_helper(get_env("TRIM_SYMBOL"));
+    return get_env(TRIM_SYMBOL).empty() ? debug::g_trim_symbol.load() : true_false_helper(get_env(TRIM_SYMBOL));
 }
 
 // fast backtrace
@@ -74,7 +73,8 @@ std::string backtrace_level_1()
         const std::regex pattern(R"((.*)\((.*)(\+0x.*)\)\s\[.*\])");
         if (std::smatch matches; std::regex_search(name, matches, pattern)) {
             if (matches.size() == 4) {
-                return std::make_pair(matches[1].str(), matches[2].str().empty() ? matches[3].str() : demangle(matches[2].str().c_str()));
+                return std::make_pair(matches[1].str(),
+                    matches[2].str().empty() ? matches[3].str() : debug::demangle(matches[2].str().c_str()));
             }
         }
 
@@ -166,11 +166,12 @@ std::string backtrace_level_2()
     return ss.str();
 }
 
-std::atomic_int g_pre_defined_level = -1;
+std::atomic_int debug::g_pre_defined_level = -1;
 
-std::string backtrace()
+std::string debug::backtrace()
 {
-    switch (/* const auto level = */get_env(BACKTRACE_LEVEL).empty() ? g_pre_defined_level.load() : get_variable<int>(BACKTRACE_LEVEL))
+    switch (/* const auto level = */get_env(BACKTRACE_LEVEL).empty() ? debug::g_pre_defined_level.load()
+        : get_variable<int>(BACKTRACE_LEVEL))
     {
         case 1: return backtrace_level_1();
         case 2: return backtrace_level_2();

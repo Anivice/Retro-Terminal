@@ -28,6 +28,7 @@
 #include <vector>
 #include <chrono>
 #include "log.h"
+#include "backtrace.h"
 
 class WorkerThread {
 private:
@@ -59,9 +60,7 @@ public:
             invoke_with_any<decltype(bound_function), Args...>(bound_function, args);
         };
 
-#ifdef __DEBUG__
-        workerThreadName = debug::demangle(typeid(InstanceType).name()) + "::" + debug::demangle(typeid(method).name());
-#endif
+        if (DEBUG) workerThreadName = debug::demangle(typeid(InstanceType).name()) + "::" + debug::demangle(typeid(method).name());
     }
 
     // Delete copy constructor and copy assignment operator
@@ -77,7 +76,7 @@ public:
             return;
         }
 
-        log("[Worker] Starting worker thread ", workerThreadName, "...\n");
+        debug_log("Starting worker thread ", workerThreadName, "...\n");
         running = true;
 
         // Prepare the arguments as a vector of std::any
@@ -85,7 +84,7 @@ public:
 
         // Start the thread with the correct arguments
         WorkerThreadInstance = std::thread(method_, std::ref(running), any_args);
-        log("[Worker] Worker thread ", workerThreadName, " detached...\n");
+        debug_log("Worker thread ", workerThreadName, " detached...\n");
     }
 
     void stop()
@@ -94,21 +93,21 @@ public:
             return;
         }
 
-        log("[Worker] Stopping worker thread ", workerThreadName, "...\n");
+        debug_log("Stopping worker thread ", workerThreadName, "...\n");
         running = false;
         if (WorkerThreadInstance.joinable()) {
             WorkerThreadInstance.join();
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        log("[Worker] Worker thread ", workerThreadName, " stopped...\n");
+        debug_log("Worker thread ", workerThreadName, " stopped...\n");
     }
 
     ~WorkerThread()
     {
         if (running)
         {
-            log("[Worker] Stopping worker thread ", workerThreadName, " automatically...\n");
+            debug_log("Stopping worker thread ", workerThreadName, " automatically...\n");
             stop();
         }
     }

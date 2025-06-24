@@ -13,7 +13,7 @@ const arg_parser::parameter_vector Arguments = {
     { .name = "help",       .short_name = 'h', .arg_required = false,   .description = "Prints this help message" },
     { .name = "version",    .short_name = 'v', .arg_required = false,   .description = "Prints version" },
     { .name = "config",     .short_name = 'c', .arg_required = true,    .description = "Path to config file" },
-    { .name = "verbose",    .short_name = 'v', .arg_required = false,   .description = "Enable verbose output" },
+    { .name = "verbose",    .short_name = 'V', .arg_required = false,   .description = "Enable verbose output" },
 };
 
 void print_help(const std::string & program_name)
@@ -53,12 +53,12 @@ void debug_section_config(const std::map < std::string, std::vector<std::string>
     for (const auto & [key, value] : key_pairs)
     {
         if (key == "backtrace_level") {
-            g_pre_defined_level = static_cast<int>(std::strtol(value.front().c_str(), nullptr, 10));
+            debug::g_pre_defined_level = static_cast<int>(std::strtol(value.front().c_str(), nullptr, 10));
         } else if (key == "verbose") {
             g_verbose = true_false_helper(value.front());
             if (g_verbose) { debug_log("Verbose mode enabled\n"); }
         } else if (key == "trim_symbol") {
-            g_trim_symbol = true_false_helper(value.front());
+            debug::g_trim_symbol = true_false_helper(value.front());
         } else {
             debug_log(color(5, 5, 0), "WARNING: `", key, "` is not a valid key name, ignored\n", no_color());
         }

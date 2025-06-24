@@ -3,7 +3,8 @@
 
 // env variables
 #define BACKTRACE_LEVEL "BACKTRACE_LEVEL"
-#define COLOR "COLOR"
+#define COLOR           "COLOR"
+#define TRIM_SYMBOL     "TRIM_SYMBOL"
 
 #include <string>
 #include <functional>
