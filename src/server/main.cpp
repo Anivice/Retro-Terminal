@@ -7,8 +7,6 @@
 #include "helper/cpp_assert.h"
 #include "helper/get_env.h"
 
-std::atomic_bool g_verbose{false};
-
 const arg_parser::parameter_vector Arguments = {
     { .name = "help",       .short_name = 'h', .arg_required = false,   .description = "Prints this help message" },
     { .name = "version",    .short_name = 'v', .arg_required = false,   .description = "Prints version" },
@@ -55,12 +53,12 @@ void debug_section_config(const std::map < std::string, std::vector<std::string>
         if (key == "backtrace_level") {
             debug::g_pre_defined_level = static_cast<int>(std::strtol(value.front().c_str(), nullptr, 10));
         } else if (key == "verbose") {
-            g_verbose = true_false_helper(value.front());
-            if (g_verbose) { debug_log("Verbose mode enabled\n"); }
+            debug::verbose = true_false_helper(value.front());
+            verbose_log("Verbose mode enabled\n");
         } else if (key == "trim_symbol") {
             debug::g_trim_symbol = true_false_helper(value.front());
         } else {
-            debug_log(color(5, 5, 0), "WARNING: `", key, "` is not a valid key name, ignored\n", no_color());
+            warning_log("`", key, "` is not a valid key name, ", key, "=", value, " ignored");
         }
     }
 }
@@ -73,7 +71,7 @@ void general_section_config(const std::map < std::string, std::vector<std::strin
             assert_one_value(value, "color");
             g_no_color = !true_false_helper(value.front());
         } else {
-            debug_log(color(5, 5, 0), "WARNING: `", key, "` is not a valid key name (", value, "), ignored\n", no_color());
+            warning_log("`", key, "` is not a valid key name, ", key, "=", value, " ignored");
         }
     }
 }
@@ -125,30 +123,37 @@ int main(int argc, char **argv)
             return EXIT_SUCCESS;
         }
 
+        if (contains("verbose", arg_val))
+        {
+            // output if and only if verbose mode is not enabled before, prevent duplicated output
+            verbose_log("Verbose mode enabled\n");
+            debug::verbose = true;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         if (contains("config", arg_val))
         {
             process_config(configuration(arg_val));
         }
 
-        if (contains("verbose", arg_val))
-        {
-            // output if and only if verbose mode is not enabled before, prevent duplicated output
-            if (!g_verbose) debug_log("Verbose mode enabled\n");
-            g_verbose = true;
-        }
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         if (!get_env("VERBOSE").empty())
         {
-            const bool before = g_verbose;
-            g_verbose = true_false_helper(get_env("VERBOSE"));
-            if (before && !g_verbose) debug_log("Verbose mode disabled by environment variable\n");
+            const bool before = debug::verbose;
+            debug::verbose = true_false_helper(get_env("VERBOSE"));
+            if (before && !debug::verbose) debug_log("Verbose mode disabled by environment variable");
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
         assert_short(false);
     }
     catch (const std::exception & e)
     {
-        std::cerr << e.what() << std::endl;
+        error_log(e.what());
         return EXIT_FAILURE;
     }
 

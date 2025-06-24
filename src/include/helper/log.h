@@ -34,6 +34,7 @@
 #include <any>
 #include <cstring>
 #include <regex>
+#include "color.h"
 
 #define construct_simple_type_compare(type)                             \
     template <typename T>                                               \
@@ -136,6 +137,7 @@ namespace debug {
     constexpr bool is_pair_v = is_pair<T>::value;
 
     extern std::mutex log_mutex;
+    extern std::atomic_bool verbose;
     template <typename ParamType>
     void _log(const ParamType& param);
     template <typename ParamType, typename... Args>
@@ -240,7 +242,6 @@ namespace debug {
         (_log(args), ...);
     }
 
-#ifndef __NO_CALLER__
     extern bool do_i_show_caller_next_time;
 
     template < typename StringType >
@@ -269,7 +270,7 @@ namespace debug {
     template<std::size_t N>
     struct is_char_array<const char[N]> : std::true_type {};
 
-    template <typename... Args> void log(const char * caller, const Args &...args)
+    template <typename... Args> void log_with_caller(const char * caller, const Args &...args)
     {
         std::lock_guard<std::mutex> lock(log_mutex);
         static_assert(sizeof...(Args) > 0, "log(...) requires at least one argument");
@@ -278,7 +279,7 @@ namespace debug {
         const std::any last_arg = std::get<sizeof...(Args) - 1>(ref_tuple);
 
         if (do_i_show_caller_next_time) {
-            _log("[", caller, "] ");
+            _log(color(0, 2, 2), "[", caller, "] ", no_color());
         }
 
         if constexpr (!is_char_array<LastType>::value)
@@ -289,20 +290,24 @@ namespace debug {
         {
             do_i_show_caller_next_time = _do_i_show_caller_next_time_(std::any_cast<const char*>(last_arg));
         }
-#else
+
+        _log(args...);
+    }
+
     template <typename... Args> void log(const Args &...args)
     {
-#endif
+        std::lock_guard<std::mutex> lock(log_mutex);
+        do_i_show_caller_next_time = true;
         _log(args...);
     }
 }
 
-# ifndef __NO_CALLER__
-#   include <source_location>
-    std::string strip_name(const std::string & name);
-#   define debug_log(...) ::debug::log(strip_name(std::source_location::current().function_name()).c_str(), __VA_ARGS__)
-# else
-#   define debug_log(...) ::debug::log(__VA_ARGS__)
-# endif
+#include <source_location>
+namespace debug { std::string _strip_name_(const std::string & name); }
+#define debug_log(...)      if (DEBUG) ::debug::log_with_caller(debug::_strip_name_(std::source_location::current().function_name()).c_str(), color(2,2,2), "[DEBUG]: ", color(4,4,4), __VA_ARGS__, no_color(), "\n")
+#define verbose_log(...)    if (::debug::verbose) { if (DEBUG) ::debug::log_with_caller(debug::_strip_name_(std::source_location::current().function_name()).c_str(), color(2,2,2), "[VERBOSE]: ", no_color(), __VA_ARGS__); else ::debug::log(color(2,2,2), "[VERBOSE]: ", no_color(), __VA_ARGS__); }
+#define console_log(...)    if (DEBUG) ::debug::log_with_caller(debug::_strip_name_(std::source_location::current().function_name()).c_str(), __VA_ARGS__); else ::debug::log(__VA_ARGS__);
+#define warning_log(...)    ::debug::log_with_caller(debug::_strip_name_(std::source_location::current().function_name()).c_str(), color(4,4,0), "[WARNING]: ", color(5,5,0), __VA_ARGS__, no_color(), "\n")
+#define error_log(...)      ::debug::log_with_caller(debug::_strip_name_(std::source_location::current().function_name()).c_str(), color(4,0,0), "[ERROR]: ", color(5,0,0), __VA_ARGS__, errno != 0 ? color(5,0,0) : color(0,4,0), "errno=", errno, " (", strerror(errno), ")", no_color(), "\n")
 
 #endif // LOG_H
