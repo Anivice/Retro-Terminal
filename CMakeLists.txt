@@ -57,25 +57,35 @@ if ("X${CMAKE_BUILD_TYPE}" STREQUAL "XDebug")
             -Wl,-z,relro -Wl,-z,now
     )
 
-    if ("${COMPILE_WITH_MEMORY_SANITIZERS}" STREQUAL "True")
-        message(STATUS "Sanitizers for memory enabled")
-        list(APPEND compiler_options
-                -fsanitize=address                  # Detect illegal memory access such as buffer overflows and use-after-free
-                -fsanitize=undefined                # Detect undefined behavior like integer overflows and null dereferencing
-        )
+#    list(APPEND compiler_options
+#            -fsanitize=address
+#            -fsanitize=undefined
+#    )
+#
+#    list(APPEND linker_options
+#            -fsanitize=address
+#            -fsanitize=undefined
+#            -lasan -lubsan
+#    )
 
-        list(APPEND linker_options
-                -fsanitize=address                  # Link the AddressSanitizer runtime for memory integrity
-                -fsanitize=undefined                # Link the UndefinedBehaviorSanitizer for detecting undefined behavior
-                -lasan -lubsan
-        )
-    endif ()
+#    list(APPEND compiler_options
+#            -fsanitize=thread
+#            -fsanitize=undefined
+#    )
+#
+#    list(APPEND linker_options
+#            -fsanitize=thread
+#            -fsanitize=undefined
+#            -ltsan -lubsan
+#    )
+
     add_compile_options(${compiler_options})
     add_link_options(${linker_options})
 else ()
     add_compile_definitions(DEBUG=0)
 endif ()
 
+include_directories(src/include)
 add_compile_definitions(VERSION="0.0.1")
 add_library(lfs SHARED
         src/helper/log.cpp           src/include/helper/log.h
@@ -94,13 +104,16 @@ add_library(lfs SHARED
         src/core/cache.cpp           src/include/core/cache.h
         src/core/basic_file_ops.cpp  src/include/core/basic_file_ops.h
         src/include/helper/WorkerThread.h
+        src/core/compress.cpp        src/include/core/compress.h
 )
-target_include_directories(lfs PRIVATE src/include)
 
 add_executable(server src/server/main.cpp)
-target_include_directories(server PRIVATE src/include)
 target_link_libraries(server PRIVATE lfs)
 
 add_executable(client src/client/main.cpp)
-target_include_directories(client PRIVATE src/include)
 target_link_libraries(client PRIVATE lfs)
+
+add_executable(compress src/tests/compress.cpp)
+target_link_libraries(compress PRIVATE lfs)
+add_executable(decompress src/tests/decompress.cpp)
+target_link_libraries(decompress PRIVATE lfs)
