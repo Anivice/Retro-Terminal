@@ -35,7 +35,7 @@ void file::read(void * buffer, const size_t location, const size_t size) const
         throw runtime_error("file::read(): " + std::string(strerror(errno)));
     }
 
-    assert_throw(::read(fd, buffer, size) == size, std::string("file::read(): " + std::string(strerror(errno))));
+    assert_throw(::read(fd, buffer, size) == static_cast<long long>(size), std::string("file::read(): " + std::string(strerror(errno))));
 }
 
 void file::write(const void * buffer, const size_t location, const size_t size)
@@ -44,7 +44,7 @@ void file::write(const void * buffer, const size_t location, const size_t size)
     {
         throw runtime_error("file::read(): " + std::string(strerror(errno)));
     }
-    assert_throw(::write(fd, buffer, size) == size, std::string("file::write(): " + std::string(strerror(errno))));
+    assert_throw(::write(fd, buffer, size) == static_cast<long long>(size), std::string("file::write(): " + std::string(strerror(errno))));
 }
 
 file::~file()

@@ -11,7 +11,7 @@ class runtime_error final : public std::runtime_error
 public:
     explicit runtime_error(const std::string& what_arg) : std::runtime_error(what_arg)
     {
-        additional = color(5,0,0) + what_arg + no_color();
+        additional = color::color(5,0,0) + what_arg + color::no_color();
         if (const std::string bt = debug::backtrace(); !bt.empty())
         {
             additional += "\n";
@@ -19,7 +19,7 @@ public:
         }
         else
         {
-            additional += color(2,2,0) + "\nSet BACKTRACE_LEVEL=1 or 2 to see detailed backtrace information\n" + no_color();
+            additional += color::color(2,2,0) + "\nSet BACKTRACE_LEVEL=1 or 2 to see detailed backtrace information\n" + color::no_color();
         }
     }
 

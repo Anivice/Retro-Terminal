@@ -6,6 +6,7 @@
 #include "helper/configuration.h"
 #include "helper/cpp_assert.h"
 #include "helper/get_env.h"
+#include "core/g_global_config_t.h"
 
 const arg_parser::parameter_vector Arguments = {
     { .name = "help",       .short_name = 'h', .arg_required = false,   .description = "Prints this help message" },
@@ -34,59 +35,13 @@ void print_help(const std::string & program_name)
         output.emplace_back(name_str, description);
     }
 
-    std::cout << color(5,5,5) << program_name << no_color() << color(0,2,5) << " [options]" << no_color()
-              << std::endl << color(1,2,3) << "options:" << no_color() << std::endl;
+    std::cout << color::color(5,5,5) << program_name << color::no_color() << color::color(0,2,5) << " [options]" << color::no_color()
+              << std::endl << color::color(1,2,3) << "options:" << color::no_color() << std::endl;
     for (const auto & [name, description] : output)
     {
-        std::cout << "    " << color(1,5,4) << name << no_color()
+        std::cout << "    " << color::color(1,5,4) << name << color::no_color()
                   << std::string(max_name_len + 4 - name.size(), ' ')
-                  << color(4,5,1) << description << no_color() << std::endl;
-    }
-}
-
-#define assert_one_value(value, key) (assert_throw((value).size() == 1, "Multiple definition or simply lack of a valid definition for `" key "`"))
-
-void debug_section_config(const std::map < std::string, std::vector<std::string> > & key_pairs)
-{
-    for (const auto & [key, value] : key_pairs)
-    {
-        if (key == "backtrace_level") {
-            debug::g_pre_defined_level = static_cast<int>(std::strtol(value.front().c_str(), nullptr, 10));
-        } else if (key == "verbose") {
-            debug::verbose = true_false_helper(value.front());
-            verbose_log("Verbose mode enabled\n");
-        } else if (key == "trim_symbol") {
-            debug::g_trim_symbol = true_false_helper(value.front());
-        } else {
-            warning_log("`", key, "` is not a valid key name, ", key, "=", value, " ignored");
-        }
-    }
-}
-
-void general_section_config(const std::map < std::string, std::vector<std::string> > & key_pairs)
-{
-    for (const auto & [key, value] : key_pairs)
-    {
-        if (key == "color") {
-            assert_one_value(value, "color");
-            g_no_color = !true_false_helper(value.front());
-        } else {
-            warning_log("`", key, "` is not a valid key name, ", key, "=", value, " ignored");
-        }
-    }
-}
-
-#undef assert_one_value
-
-void process_config(const configuration & config)
-{
-    for (const auto & [section, vector] : config)
-    {
-        if (section == "debug") {
-            debug_section_config(vector);
-        } else if (section == "general") {
-            general_section_config(vector);
-        }
+                  << color::color(4,5,1) << description << color::no_color() << std::endl;
     }
 }
 
@@ -117,9 +72,9 @@ int main(int argc, char **argv)
 
         if (contains("version", arg_val))
         {
-            std::cout << color(5,5,5) << argv[0] << no_color()
-                    << color(0,3,3) << " version " << color(0,5,5) << VERSION
-                    << no_color() << std::endl;
+            std::cout << color::color(5,5,5) << argv[0] << color::no_color()
+                    << color::color(0,3,3) << " version " << color::color(0,5,5) << VERSION
+                    << color::no_color() << std::endl;
             return EXIT_SUCCESS;
         }
 
@@ -134,7 +89,11 @@ int main(int argc, char **argv)
 
         if (contains("config", arg_val))
         {
-            process_config(configuration(arg_val));
+            g_global_config.initialize(arg_val);
+            debug::verbose = true_false_helper(g_global_config.get<std::string>("debug.verbose"));
+            color::g_no_color = !true_false_helper(g_global_config.get<std::string>("general.color"));
+            debug::g_pre_defined_level = g_global_config.get<int>("debug.backtrace_level");
+            debug::g_trim_symbol = true_false_helper(g_global_config.get<std::string>("debug.trim_symbol"));
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -147,8 +106,6 @@ int main(int argc, char **argv)
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
         assert_short(false);
     }
     catch (const std::exception & e)

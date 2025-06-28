@@ -20,6 +20,7 @@ private:
 
 public:
     explicit configuration(const std::string & path);
+    const configuration_map_t & config = config_;
 };
 
 #endif //CONFIGURATION_H

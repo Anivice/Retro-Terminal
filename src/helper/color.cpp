@@ -6,16 +6,24 @@
 #include "helper/cpp_assert.h"
 #include "helper/get_env.h"
 #include "helper/color.h"
+#include "core/g_global_config_t.h"
 
-std::atomic_bool g_no_color = false;
+std::atomic_bool color::g_no_color;
+
 
 bool is_no_color()
 {
+    static int is_no_color_cache = -1;
+    if (is_no_color_cache != -1) {
+        return is_no_color_cache;
+    }
+
     auto color_env = get_env(COLOR);
     std::ranges::transform(color_env, color_env.begin(), ::tolower);
 
     if (color_env == "always")
     {
+        is_no_color_cache = 0;
         return false;
     }
 
@@ -29,10 +37,11 @@ bool is_no_color()
         is_terminal = true;
     }
 
-    return no_color_from_env || !is_terminal || g_no_color;
+    is_no_color_cache = no_color_from_env || !is_terminal || color::g_no_color;
+    return is_no_color_cache;
 }
 
-std::string no_color()
+std::string color::no_color()
 {
     if (!is_no_color())
     {
@@ -42,7 +51,7 @@ std::string no_color()
     return "";
 }
 
-std::string color(const int r, const int g, const int b, const int br, const int bg, const int bb)
+std::string color::color(const int r, const int g, const int b, const int br, const int bg, const int bb)
 {
     if (is_no_color())
     {
@@ -52,7 +61,7 @@ std::string color(const int r, const int g, const int b, const int br, const int
     return color(r, g, b) + bg_color(br, bg, bb);
 }
 
-std::string color(int r, int g, int b)
+std::string color::color(int r, int g, int b)
 {
     if (is_no_color())
     {
@@ -74,7 +83,7 @@ std::string color(int r, int g, int b)
     return "\033[38;5;" + std::to_string(scale) + "m";
 }
 
-std::string bg_color(int r, int g, int b)
+std::string color::bg_color(int r, int g, int b)
 {
     if (is_no_color())
     {

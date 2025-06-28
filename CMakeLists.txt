@@ -105,6 +105,8 @@ add_library(lfs SHARED
         src/core/basic_file_ops.cpp  src/include/core/basic_file_ops.h
         src/include/helper/WorkerThread.h
         src/core/compress.cpp        src/include/core/compress.h
+        src/core/g_global_config_t.cpp
+        src/include/core/g_global_config_t.h
 )
 
 add_executable(server src/server/main.cpp)

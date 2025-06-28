@@ -10,6 +10,7 @@
 #include "helper/get_env.h"
 #include "helper/execute.h"
 #include "helper/log.h"
+#include "core/g_global_config_t.h"
 
 #define MAX_STACK_FRAMES (64)
 
@@ -46,7 +47,9 @@ std::atomic_bool debug::g_trim_symbol = false;
 
 bool trim_symbol_yes()
 {
-    return get_env(TRIM_SYMBOL).empty() ? debug::g_trim_symbol.load() : true_false_helper(get_env(TRIM_SYMBOL));
+    return get_env(TRIM_SYMBOL).empty() ?
+        debug::g_trim_symbol.load()
+        : true_false_helper(get_env(TRIM_SYMBOL));
 }
 
 // fast backtrace
@@ -81,12 +84,12 @@ std::string backtrace_level_1()
         return std::make_pair("", name);
     };
 
-    for (const auto & [symbol_name, frame] : frames)
+    for (const auto &symbol_name: frames | std::views::keys)
     {
         const auto [path, name] = get_pair(symbol_name);
-        ss  << color(0,4,1) << "Frame " << color(5,2,1) << "#" << i++ << " "
-            << std::hex << color(2,4,5) << path
-            << ": " << color(1,5,5) << trim_sym(name) << no_color() << "\n";
+        ss  << color::color(0,4,1) << "Frame " << color::color(5,2,1) << "#" << i++ << " "
+            << std::hex << color::color(2,4,5) << path
+            << ": " << color::color(1,5,5) << trim_sym(name) << color::no_color() << "\n";
     }
 
     return ss.str();
@@ -153,11 +156,11 @@ std::string backtrace_level_2()
                 info = generate_addr2line_trace_info(executable_path, traced_address);
             }
 
-            ss  << color(0,4,1) << "Frame " << color(5,2,1) << "#" << i++ << " "
-                << std::hex << color(2,4,5) << frame
-                << ": " << color(1,5,5) << info.name << no_color() << "\n";
+            ss  << color::color(0,4,1) << "Frame " << color::color(5,2,1) << "#" << i++ << " "
+                << std::hex << color::color(2,4,5) << frame
+                << ": " << color::color(1,5,5) << info.name << color::no_color() << "\n";
             if (!info.file.empty())
-                ss << "          " << color(0,1,5) << info.file << no_color() << "\n";
+                ss << "          " << color::color(0,1,5) << info.file << color::no_color() << "\n";
         } else {
             ss << "No trace information for " << std::hex << frame << "\n";
         }
@@ -170,7 +173,7 @@ std::atomic_int debug::g_pre_defined_level = -1;
 
 std::string debug::backtrace()
 {
-    switch (/* const auto level = */get_env(BACKTRACE_LEVEL).empty() ? debug::g_pre_defined_level.load()
+    switch (/* const auto level = */get_env(BACKTRACE_LEVEL).empty() ? g_pre_defined_level.load()
         : get_variable<int>(BACKTRACE_LEVEL))
     {
         case 1: return backtrace_level_1();
