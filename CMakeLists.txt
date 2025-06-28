@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.31)
-project(lfs CXX)
+project(lfs CXX C)
 
 set(CMAKE_CXX_STANDARD 23)
 
 find_program(CCACHE_PROGRAM ccache)
-if (NOT "${CCACHE_PROGRAM}" STREQUAL "")
+if (NOT "${CCACHE_PROGRAM}" STREQUAL "CCACHE_PROGRAM-NOTFOUND")
     set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
     set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
     message(STATUS "Using ${CCACHE_PROGRAM}")
@@ -21,6 +21,8 @@ if ("X${CMAKE_BUILD_TYPE}" STREQUAL "XDebug")
             -Wuninitialized                         # Warn if variables are used uninitialized
             -fdiagnostics-show-option               # Show which option triggered the warning
             -fdiagnostics-color=always              # Enable colored diagnostics for better readability
+            -march=native
+            -mtune=native
 
             # Debugging and stack protection
             -g3                                     # Maximum debug information, including macro expansions
@@ -88,25 +90,24 @@ endif ()
 include_directories(src/include)
 add_compile_definitions(VERSION="0.0.1")
 add_library(lfs SHARED
-        src/helper/log.cpp           src/include/helper/log.h
         src/include/helper/cpp_assert.h
-        src/helper/backtrace.cpp     src/include/helper/backtrace.h
-        src/helper/execute.cpp       src/include/helper/execute.h
-        src/include/helper/err_type.h
-        src/helper/color.cpp         src/include/helper/color.h
-        src/helper/get_env.cpp       src/include/helper/get_env.h
-        src/helper/arg_parser.cpp    src/include/helper/arg_parser.h
-        src/helper/configuration.cpp src/include/helper/configuration.h
-        src/helper/socket.cpp        src/include/helper/socket.h
-        src/helper/file.cpp          src/include/helper/file.h
-        src/core/directory.cpp       src/include/core/directory.h
-        src/core/file.cpp            src/include/core/file.h
-        src/core/cache.cpp           src/include/core/cache.h
-        src/core/basic_file_ops.cpp  src/include/core/basic_file_ops.h
         src/include/helper/WorkerThread.h
-        src/core/compress.cpp        src/include/core/compress.h
-        src/core/g_global_config_t.cpp
-        src/include/core/g_global_config_t.h
+        src/include/helper/err_type.h
+        src/helper/log.cpp              src/include/helper/log.h
+        src/helper/backtrace.cpp        src/include/helper/backtrace.h
+        src/helper/execute.cpp          src/include/helper/execute.h
+        src/helper/color.cpp            src/include/helper/color.h
+        src/helper/get_env.cpp          src/include/helper/get_env.h
+        src/helper/arg_parser.cpp       src/include/helper/arg_parser.h
+        src/helper/configuration.cpp    src/include/helper/configuration.h
+        src/helper/socket.cpp           src/include/helper/socket.h
+        src/helper/file.cpp             src/include/helper/file.h
+        src/core/directory.cpp          src/include/core/directory.h
+        src/core/file.cpp               src/include/core/file.h
+        src/core/cache.cpp              src/include/core/cache.h
+        src/core/basic_file_ops.cpp     src/include/core/basic_file_ops.h
+        src/core/g_global_config_t.cpp  src/include/core/g_global_config_t.h
+        src/core/lz4.c                  src/include/core/lz4.h
 )
 
 add_executable(server src/server/main.cpp)
@@ -115,7 +116,10 @@ target_link_libraries(server PRIVATE lfs)
 add_executable(client src/client/main.cpp)
 target_link_libraries(client PRIVATE lfs)
 
-add_executable(compress src/tests/compress.cpp)
+add_executable(compress src/utils/compress.c)
 target_link_libraries(compress PRIVATE lfs)
-add_executable(decompress src/tests/decompress.cpp)
+add_executable(decompress src/utils/decompress.c)
 target_link_libraries(decompress PRIVATE lfs)
+
+add_executable(test src/utest/test.cpp src/include/test/test.h src/utest/main.cpp src/utest/embedded.cpp)
+target_link_libraries(test PRIVATE lfs)
