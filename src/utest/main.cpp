@@ -3,6 +3,8 @@
 #include <iomanip>
 #include <thread>
 #include <sstream>
+#include <cstring>
+#include <sys/ioctl.h>
 #include "test/test.h"
 #include "helper/color.h"
 
@@ -18,7 +20,19 @@ int main()
     for (const auto unit_address : test::unit_tests)
     {
         auto * base_unit = (test::unit_t *)unit_address;
-        constexpr int length = 64;
+        int length = 4;
+
+        winsize w{};
+        // If redirecting STDOUT to one file ( col or row == 0, or the previous
+        // ioctl call's failed )
+        if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) != 0 ||
+            (w.ws_col | w.ws_row) == 0)
+        {
+            std::cerr << "Warning: failed to determine a reasonable terminal size: " << strerror(errno) << std::endl;
+        } else {
+            length = w.ws_col / 4;
+        }
+
         std::stringstream output_head;
         output_head << "\x1b[2K\r" << color::color(1,5,4) << "TEST\t[" << current_test++ << "/" << all_tests << "]\t"
                   << base_unit->name() << std::string(std::max(length - static_cast<signed int>(base_unit->name().length()), 4), ' ');
@@ -58,7 +72,8 @@ int main()
             std::cout << output_str << color::color(0,5,0) << "  PASSED: " << color::color(0,2,2) << base_unit->success() << "\r" << std::flush;
             success++;
         } else {
-            std::cout << output_str << color::color(5,0,0) << "  FAILED: " << base_unit->failure() << "\n";
+            std::cout << output_str << "  " << color::color(5,0,0) << color::bg_color(0,0,1)
+                      << "FAILED: " << base_unit->failure() << color::no_color() << "\n";
             failed++;
         }
 
