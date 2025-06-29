@@ -110,8 +110,8 @@ add_library(core SHARED
         src/helper/lz4.c                src/include/helper/lz4.h
 )
 
-add_executable(server src/server/main.cpp)
-target_link_libraries(server PRIVATE core)
+add_executable(backend src/backend/main.cpp)
+target_link_libraries(backend PRIVATE core)
 
 add_executable(compress src/utils/compress.c)
 target_link_libraries(compress PRIVATE core)

@@ -85,7 +85,9 @@ int main(int argc, char **argv)
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+        assert_throw(std::ranges::find_if(args,
+            [](const std::pair<std::string, std::string> & p)->bool{ return p.first == "config"; }) != args.end(),
+            "You have to specify a configuration file!");
         if (contains("config", arg_val))
         {
             g_global_config.initialize(arg_val);
@@ -105,7 +107,6 @@ int main(int argc, char **argv)
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        assert_short(false);
     }
     catch (const std::exception & e)
     {

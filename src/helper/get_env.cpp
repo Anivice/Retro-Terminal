@@ -22,7 +22,11 @@ bool true_false_helper(std::string val)
     } else if (val == "false") {
         return false;
     } else {
-        return std::stoi(val) != 0;
+        try {
+            return std::stoi(val) != 0;
+        } catch (...) {
+            return false;
+        }
     }
 }
 

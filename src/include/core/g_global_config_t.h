@@ -66,12 +66,22 @@ public:
                 return section_key_value.at(0);
             }
 
-            if constexpr (std::is_integral_v<Type>) {
-                return std::stoll(section_key_value.at(0));
+            if constexpr (std::is_integral_v<Type>)
+            {
+                try {
+                    return std::stoll(section_key_value.at(0));
+                } catch (std::exception & e) {
+                    throw runtime_error(e.what());
+                }
             }
 
-            if constexpr (std::is_floating_point_v<Type>) {
-                return std::stod(section_key_value.at(0));
+            if constexpr (std::is_floating_point_v<Type>)
+            {
+                try {
+                    return std::stod(section_key_value.at(0));
+                } catch (std::exception & e) {
+                    throw runtime_error(e.what());
+                }
             }
         }
 
