@@ -1,7 +1,7 @@
 #ifndef TEST_H
 #define TEST_H
 
-#include <vector>
+#include <map>
 #include <string>
 
 namespace test {
@@ -16,7 +16,7 @@ public:
     virtual std::string name() = 0;
 };
 
-extern std::vector < void * > unit_tests;
+extern std::map < std::string, void * > unit_tests;
 } // test
 
 #endif //TEST_H

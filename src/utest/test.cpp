@@ -175,9 +175,15 @@ public:
     }
 } config_test;
 
-std::vector < void * > test::unit_tests = {
-    &failed_delay_test, &failed_unit_test, &simple_unit_test, &delay_unit_test, // unit test dummies
-    &lz4_test, &config_test // utilities
+std::map < std::string, void * > test::unit_tests = {
+    // unit test dummies
+    { "@@__delay_faulty__", &failed_delay_test },
+    { "@@__faulty__", &failed_unit_test },
+    { "@@__simple__", &simple_unit_test },
+    { "@@__delay_simple__", &delay_unit_test },
+    // unit test dummies end
+
+    { "LZ4", &lz4_test }, { "Config", &config_test } // utilities
 };
 
 #endif
