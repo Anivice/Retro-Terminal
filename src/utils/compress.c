@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
-#include "core/lz4.h"
+#include "helper/lz4.h"
 
 #define BLOCK 4096
 

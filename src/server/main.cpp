@@ -3,7 +3,7 @@
 #include "helper/log.h"
 #include "helper/arg_parser.h"
 #include "helper/color.h"
-#include "helper/configuration.h"
+#include "core/configuration.h"
 #include "helper/cpp_assert.h"
 #include "helper/get_env.h"
 #include "core/g_global_config_t.h"
