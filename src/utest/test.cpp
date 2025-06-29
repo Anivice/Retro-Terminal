@@ -1,8 +1,17 @@
+#if DEBUG
+
 #include <thread>
+#include <cstring>
+#include <vector>
 #include "test/test.h"
+#include "core/lz4.h"
 
 class simple_unit_test_ final : test::unit_t {
 public:
+    std::string name() override {
+        return "Simple test";
+    }
+
     std::string success() override {
         return "NORMAL UNIT TEST";
     }
@@ -18,6 +27,10 @@ public:
 
 class delay_unit_test_ final : test::unit_t {
 public:
+    std::string name() override {
+        return "Simple test (delayed)";
+    }
+
     std::string success() override {
         return "NORMAL UNIT TEST (delayed)";
     }
@@ -34,6 +47,10 @@ public:
 
 class failed_unit_test_ final : test::unit_t {
 public:
+    std::string name() override {
+        return "Unit test (designed to fail)";
+    }
+
     std::string success() override {
         exit(EXIT_FAILURE);
     }
@@ -49,6 +66,10 @@ public:
 
 class failed_delay_test_ final : test::unit_t {
 public:
+    std::string name() override {
+        return "Unit test (delayed, designed to fail)";
+    }
+
     std::string success() override {
         exit(EXIT_FAILURE);
     }
@@ -63,6 +84,61 @@ public:
     }
 } failed_delay_test;
 
+class lz4_test_ final : test::unit_t {
+public:
+    std::string name() override {
+        return "LZ4 test";
+    }
+
+    std::string success() override {
+        return "LZ4 test succeeded";
+    }
+
+    std::string failure() override {
+        return "LZ4 test failed";
+    }
+
+    bool test_one_time(const std::vector<char> & src)
+    {
+        const int srcSize = static_cast<int>(src.size());
+        const int maxDst = LZ4_compressBound(srcSize);          /* worst-case size */
+        std::vector<char> compressed(maxDst);
+        const int cSize = LZ4_compress_default(src.data(), compressed.data(), srcSize, maxDst); /* returns bytes */
+        std::vector<char> restored(srcSize);
+        const int dSize = LZ4_decompress_safe(compressed.data(), restored.data(), cSize, srcSize);
+        return dSize == srcSize && !memcmp(src.data(), restored.data(), srcSize);
+    }
+
+    bool run() override
+    {
+        const char *msg =
+            "QWhoaGhoaCBNaWthIGlzIHRoZSBjdXRlc3QgY2F0Ym95IEkgaGF2ZSBldmVyIHNlZW4gYWhoaGho\n"
+            "aGhoIHNvIGN1dGUgc28gY3V0ZSBJIHdhbnQgdG8ga2lzcyBoaXMgZmFjZSBhaGhoaGgK\n";
+        if (const auto instance = std::string(msg);
+            !test_one_time({instance.begin(), instance.end()}))
+        {
+            return false;
+        }
+
+        std::vector<char> src(1024 * 32);
+        for (int i = 0; i < 8192; i++)
+        {
+            for (auto & c : src) {
+                c = static_cast<char>(rand());
+            }
+
+            if (!test_one_time(src)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+} lz4_test;
+
 std::vector < void * > test::unit_tests = {
-    &failed_delay_test, &failed_unit_test, &simple_unit_test, &delay_unit_test,
+    &failed_delay_test, &failed_unit_test, &simple_unit_test, &delay_unit_test, // unit test dummies
+    &lz4_test
 };
+
+#endif

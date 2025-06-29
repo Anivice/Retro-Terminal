@@ -13,6 +13,7 @@ public:
     virtual bool run() = 0;
     virtual std::string success() = 0;
     virtual std::string failure() = 0;
+    virtual std::string name() = 0;
 };
 
 extern std::vector < void * > unit_tests;

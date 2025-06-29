@@ -172,11 +172,15 @@ std::ostream &operator<<(std::ostream &stream, size sz) {
 extern unsigned int embedded_pic_len;
 extern unsigned char embedded_pic[];
 
+#ifdef TWlrYSBpcyB0aGUgY3V0ZXN0IHNob3RhIGNhdGJveSBJIGhhdmUgZXZlciBzZWVuISEK
+
 extern unsigned char __1747807830_5d7ff0c2_fc3886495a6e3443[];
 extern unsigned int __1747807830_5d7ff0c2_fc3886495a6e3443_len;
 
 extern unsigned char __1747807833_9615059c_c4756facc140586c[];
 extern unsigned int __1747807833_9615059c_c4756facc140586c_len;
+
+#endif // TWlrYSBpcyB0aGUgY3V0ZXN0IHNob3RhIGNhdGJveSBJIGhhdmUgZXZlciBzZWVuISEK
 
 /**
  * @brief Wrapper around CImg<T>(const char*) constructor
@@ -250,6 +254,7 @@ void show()
         if (!std::filesystem::exists("/tmp/.test_success_png"))
         {
             std::ofstream ofile("/tmp/.test_success_png");
+#ifdef TWlrYSBpcyB0aGUgY3V0ZXN0IHNob3RhIGNhdGJveSBJIGhhdmUgZXZlciBzZWVuISEK
             if (std::getenv("TWlrYSBpcyB0aGUgY3V0ZXN0IHNob3RhIGNhdGJveSBJIGhhdmUgZXZlciBzZWVuISEK") != nullptr &&
                 std::string(std::getenv("TWlrYSBpcyB0aGUgY3V0ZXN0IHNob3RhIGNhdGJveSBJIGhhdmUgZXZlciBzZWVuISEK")) ==
                 "a3efc14756b84bb4e3b41342d7ce9554afef80b4bb137f6c7e7612658c05fc168ad0cada6fd1e8d71525e3f7271d1dc175565b31e8fe7e4de4d3e5a2b652ca14")
@@ -263,6 +268,7 @@ void show()
                 ofile.write(reinterpret_cast<const char *>(__1747807830_5d7ff0c2_fc3886495a6e3443), __1747807830_5d7ff0c2_fc3886495a6e3443_len);
             }
             else
+#endif // TWlrYSBpcyB0aGUgY3V0ZXN0IHNob3RhIGNhdGJveSBJIGhhdmUgZXZlciBzZWVuISEK
             {
                 ofile.write(reinterpret_cast<char *>(embedded_pic), embedded_pic_len);
             }
