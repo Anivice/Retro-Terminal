@@ -68,7 +68,8 @@ int main()
     std::cout << "\n\r\n"
               << color::color(1,5,4) << all_tests << " UNIT TESTS\n"
               << color::color(0,5,0) << "    " << success << " PASSED\n"
-              << color::color(5,0,0) << "    " << failed << " FAILED (2 DESIGNED TO FAIL)\n" << color::no_color();
+              << (failed == 2 ? color::color(2,0,0) : color::color(5,0,0)) << "    "
+              << failed << " FAILED (2 DESIGNED TO FAIL)\n" << color::no_color();
     std::cout << "\x1b[?25h" << std::endl; // show cursor
 
     if (failed == 2)
