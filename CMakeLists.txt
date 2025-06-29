@@ -4,7 +4,7 @@ if ("X${CMAKE_BUILD_TYPE}" STREQUAL "XDebug")
     add_subdirectory(src/imgInTerm/)
 endif ()
 
-project(lfs CXX C)
+project(CyberTerm CXX C)
 
 set(CMAKE_CXX_STANDARD 23)
 
@@ -94,7 +94,7 @@ endif ()
 
 include_directories(src/include)
 add_compile_definitions(VERSION="0.0.1")
-add_library(lfs SHARED
+add_library(core SHARED
         src/include/helper/cpp_assert.h
         src/include/helper/WorkerThread.h
         src/include/helper/err_type.h
@@ -104,31 +104,23 @@ add_library(lfs SHARED
         src/helper/color.cpp            src/include/helper/color.h
         src/helper/get_env.cpp          src/include/helper/get_env.h
         src/helper/arg_parser.cpp       src/include/helper/arg_parser.h
-        src/helper/configuration.cpp    src/include/helper/configuration.h
-        src/helper/socket.cpp           src/include/helper/socket.h
-        src/helper/file.cpp             src/include/helper/file.h
-        src/core/directory.cpp          src/include/core/directory.h
-        src/core/file.cpp               src/include/core/file.h
+        src/core/configuration.cpp      src/include/core/configuration.h
         src/core/cache.cpp              src/include/core/cache.h
-        src/core/basic_file_ops.cpp     src/include/core/basic_file_ops.h
         src/core/g_global_config_t.cpp  src/include/core/g_global_config_t.h
-        src/core/lz4.c                  src/include/core/lz4.h
+        src/helper/lz4.c                src/include/helper/lz4.h
 )
 
 add_executable(server src/server/main.cpp)
-target_link_libraries(server PRIVATE lfs)
-
-add_executable(client src/client/main.cpp)
-target_link_libraries(client PRIVATE lfs)
+target_link_libraries(server PRIVATE core)
 
 add_executable(compress src/utils/compress.c)
-target_link_libraries(compress PRIVATE lfs)
+target_link_libraries(compress PRIVATE core)
 add_executable(decompress src/utils/decompress.c)
-target_link_libraries(decompress PRIVATE lfs)
+target_link_libraries(decompress PRIVATE core)
 
 if ("X${CMAKE_BUILD_TYPE}" STREQUAL "XDebug")
     add_executable(test.exe src/utest/test.cpp src/include/test/test.h src/utest/main.cpp)
-    target_link_libraries(test.exe PRIVATE lfs tiv)
+    target_link_libraries(test.exe PRIVATE core tiv)
     target_compile_definitions(test.exe PRIVATE SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 
     add_custom_target(test

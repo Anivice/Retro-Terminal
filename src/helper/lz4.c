@@ -113,7 +113,7 @@
 #ifndef LZ4_STATIC_LINKING_ONLY
 #  define LZ4_STATIC_LINKING_ONLY
 #endif
-#include "core/lz4.h"
+#include "helper/lz4.h"
 /* see also "memory routines" below */
 
 

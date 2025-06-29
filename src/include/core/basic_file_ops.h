@@ -1,4 +1,0 @@
-#ifndef BASIC_FILE_OPS_H
-#define BASIC_FILE_OPS_H
-
-#endif //BASIC_FILE_OPS_H

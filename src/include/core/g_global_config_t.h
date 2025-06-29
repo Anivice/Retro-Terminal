@@ -5,7 +5,7 @@
 #include <mutex>
 #include "helper/cpp_assert.h"
 #include "helper/err_type.h"
-#include "helper/configuration.h"
+#include "core/configuration.h"
 
 struct list_view_t{};
 

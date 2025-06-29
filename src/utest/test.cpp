@@ -4,8 +4,8 @@
 #include <cstring>
 #include <vector>
 #include "test/test.h"
-#include "core/lz4.h"
-#include "helper/configuration.h"
+#include "helper/lz4.h"
+#include "core/configuration.h"
 
 class simple_unit_test_ final : test::unit_t {
 public:

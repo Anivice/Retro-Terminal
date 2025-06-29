@@ -1,5 +1,4 @@
-# LFS
-A C++ Based Network File System
+# Cyber Term
 
 ## Introduction
 
