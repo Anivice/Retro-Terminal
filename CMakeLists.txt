@@ -132,5 +132,6 @@ if ("X${CMAKE_BUILD_TYPE}" STREQUAL "XDebug")
     add_custom_target(test
             COMMAND ${CMAKE_BINARY_DIR}/test.exe
             USES_TERMINAL
+            DEPENDS test.exe
     )
 endif ()
