@@ -5,11 +5,22 @@ A C++ Based Network File System
 
 Intro goes here
 
-## How to Build
+## Usage
+
+How to use goes here
+
+## Build
 
 How to build goes here
 
 ## TODOs
 
-- [ ] Source code format compliance: Sort include files
+Different TODOs goes here
+
+- [ ]
 - [ ] 
+
+## Used Public Repositories (Embedded in Source Files)
+ * [CImg](https://github.com/GreycLab/CImg)
+ * [libpng](https://github.com/pnggroup/libpng)
+ * [LZ4](https://github.com/lz4/lz4)
