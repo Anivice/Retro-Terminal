@@ -30,7 +30,8 @@ int main()
         {
             std::cerr << "Warning: failed to determine a reasonable terminal size: " << strerror(errno) << std::endl;
         } else {
-            length = w.ws_col / 4;
+            length = w.ws_col / 2.5;
+            // std::cout << length << std::endl;
         }
 
         std::stringstream output_head;
