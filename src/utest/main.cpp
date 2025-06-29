@@ -38,7 +38,6 @@ int main()
         std::cout << color::color(0,5,0)
                   << "Congratulations, all unit tests passed (with 2 designed to fail)!\nPRESS ENTER TO EXIT..."
                   << color::no_color() << std::endl;
-        std::cin.get();
         show();
         std::cout << std::endl;
         return EXIT_SUCCESS;
