@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
         {
             std::cerr << "Warning: failed to determine a reasonable terminal size: " << strerror(errno) << std::endl;
         } else {
-            length = w.ws_col / 2.5;
+            length = static_cast<int>(w.ws_col / 2.5);
             // std::cout << length << std::endl;
         }
 
