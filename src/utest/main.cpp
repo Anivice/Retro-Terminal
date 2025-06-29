@@ -36,7 +36,7 @@ int main()
     if (failed == 2)
     {
         std::cout << color::color(0,5,0)
-                  << "Congratulations, all unit tests passed (with 2 designed to fail)!\nPRESS ENTER TO EXIT..."
+                  << "Congratulations, all unit tests passed (with 2 designed to fail)"
                   << color::no_color() << std::endl;
         show();
         std::cout << std::endl;
