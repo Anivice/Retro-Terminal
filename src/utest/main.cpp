@@ -3,8 +3,7 @@
 #include "test/test.h"
 #include "helper/color.h"
 
-extern unsigned char embedded_pic[];
-extern unsigned int embedded_pic_len;
+extern void show();
 
 int main()
 {
@@ -40,7 +39,7 @@ int main()
                   << "Congratulations, all unit tests passed (with 2 designed to fail)!\nPRESS ENTER TO EXIT..."
                   << color::no_color() << std::endl;
         std::cin.get();
-        std::cout.write((char*)embedded_pic, embedded_pic_len);
+        show();
         std::cout << std::endl;
         return EXIT_SUCCESS;
     }

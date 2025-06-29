@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.30)
 
-add_subdirectory(src/imgInTerm/src)
+add_subdirectory(src/imgInTerm/)
 
 project(lfs CXX C)
 
@@ -112,6 +112,7 @@ add_library(lfs SHARED
         src/core/g_global_config_t.cpp  src/include/core/g_global_config_t.h
         src/core/lz4.c                  src/include/core/lz4.h
 )
+target_link_libraries(lfs PUBLIC tiv)
 
 add_executable(server src/server/main.cpp)
 target_link_libraries(server PRIVATE lfs)
@@ -124,5 +125,5 @@ target_link_libraries(compress PRIVATE lfs)
 add_executable(decompress src/utils/decompress.c)
 target_link_libraries(decompress PRIVATE lfs)
 
-add_executable(test src/utest/test.cpp src/include/test/test.h src/utest/main.cpp src/utest/embedded.cpp)
+add_executable(test src/utest/test.cpp src/include/test/test.h src/utest/main.cpp)
 target_link_libraries(test PRIVATE lfs)
