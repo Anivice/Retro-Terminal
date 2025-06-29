@@ -129,6 +129,7 @@ target_link_libraries(decompress PRIVATE lfs)
 if ("X${CMAKE_BUILD_TYPE}" STREQUAL "XDebug")
     add_executable(test.exe src/utest/test.cpp src/include/test/test.h src/utest/main.cpp)
     target_link_libraries(test.exe PRIVATE lfs tiv)
+    target_compile_definitions(test.exe PRIVATE SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 
     add_custom_target(test
             COMMAND ${CMAKE_BINARY_DIR}/test.exe

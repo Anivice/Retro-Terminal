@@ -40,7 +40,7 @@ int main()
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             counter++;
             if (counter == 100) {
-                std::cout << output_str << "  " << color::color(4,0,4) << ++seconds << " s" << color::no_color() << std::flush;
+                std::cout << output_str << "  " << color::color(2,3,4) << ++seconds << " s" << color::no_color() << std::flush;
                 counter = 0;
             }
 

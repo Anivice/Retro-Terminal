@@ -5,6 +5,7 @@
 #include <vector>
 #include "test/test.h"
 #include "core/lz4.h"
+#include "helper/configuration.h"
 
 class simple_unit_test_ final : test::unit_t {
 public:
@@ -136,9 +137,47 @@ public:
     }
 } lz4_test;
 
+class config_test_ final : test::unit_t {
+public:
+    std::string name() override {
+        return "Config test";
+    }
+
+    std::string success() override {
+        return "Config test succeeded";
+    }
+
+    std::string failure() override {
+        return "Config test failed";
+    }
+
+    bool run() override
+    {
+        try {
+            configuration good_config(SOURCE_DIR "/example.config");
+        } catch (...) {
+            return false;
+        }
+
+        try {
+            configuration bad_config(SOURCE_DIR "/example.bad.config");
+            return false;
+        } catch (...) {
+        }
+
+        try {
+            configuration bad_config(SOURCE_DIR "/example.not-existing.config");
+            return false;
+        } catch (...) {
+        }
+
+        return true;
+    }
+} config_test;
+
 std::vector < void * > test::unit_tests = {
     &failed_delay_test, &failed_unit_test, &simple_unit_test, &delay_unit_test, // unit test dummies
-    &lz4_test
+    &lz4_test, &config_test // utilities
 };
 
 #endif
