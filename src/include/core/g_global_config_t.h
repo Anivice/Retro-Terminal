@@ -7,7 +7,7 @@
 #include "helper/err_type.h"
 #include "core/configuration.h"
 
-struct list_view_t{};
+using list_view_t = std::vector<std::string>;
 
 extern
 class g_global_config_t {
@@ -16,12 +16,12 @@ class g_global_config_t {
 public:
     void initialize(const std::string & config_file);
 
-    template < typename Type >
+    template < typename Type, typename ReturnType = Type >
     requires (std::is_same_v<Type, std::string>
         || std::is_integral_v<Type>
         || std::is_floating_point_v<Type>
         || std::is_same_v<Type, list_view_t>)
-    Type get(const std::string & key)
+    ReturnType get(const std::string & key)
     {
         std::lock_guard<std::mutex> lock(mutex);
 

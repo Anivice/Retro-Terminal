@@ -22,6 +22,8 @@
 #include "instance.h"
 #include "helper/log.h"
 #include "CrowRegister.h"
+#include "file_access.h"
+#include "helper/base64.hpp"
 
 using namespace std::literals;
 using json = nlohmann::json;
@@ -31,11 +33,11 @@ void CrowIntAlertSSE()
     // Define a route that streams data
     CROW_WEBSOCKET_ROUTE(backend_instance, "/stream")
         .onopen([&](crow::websocket::connection &conn) {
-            CROW_LOG_INFO << "New websocket connection from " << conn.get_remote_ip();
+            CROW_LOG_INFO << "[/Stream] New websocket connection from " << conn.get_remote_ip();
         })
 
-        .onclose([&](crow::websocket::connection &, const std::string &reason, short unsigned int) {
-            CROW_LOG_INFO << "Websocket connection closed: " << reason;
+        .onclose([&](crow::websocket::connection &, const std::string &, short unsigned int) {
+            CROW_LOG_INFO << "[/Stream] Websocket connection closed";
         })
 
         .onmessage([&](crow::websocket::connection &conn, const std::string & request, const bool is_binary)
@@ -53,18 +55,41 @@ void CrowIntAlertSSE()
             try {
                 json data = json::parse(request);
                 const std::string operation = data["Request"];
-                const std::string path = data["Path"];
                 debug_log("WebSocket request: " + operation);
-                if (operation == "read") {
+                if (operation == "read") { }
+                else if (operation == "write") {}
+                else if (operation == "query_block")
+                {
+                    const std::string path = data["Path"];
+                    const auto block = get_block_on_my_end(path);
+                    const std::string content = {block.begin(), block.end()};
+                    response["Result"] = "Success";
+                    response["Error"] = "";
+                    response["Content"] = base64::to_base64(content);
+                    send_data(response.dump());
                 }
-                else if (operation == "write") {
-                } else {
+                else if (operation == "dump_block")
+                {
+                    const std::string content_base64 = data["Content"];
+                    const std::string content = base64::from_base64(content_base64);
+                    std::array<char, BLOCK_SIZE> remote_content{};
+                    std::memcpy(remote_content.data(), content.c_str(), std::min(static_cast<uint64_t>(BLOCK_SIZE), content.size()));
+                    response["Content"] = write_block_on_my_end(remote_content);
+                    response["Result"] = "Success";
+                    response["Error"] = "";
+                    send_data(response.dump());
+                }
+                else if (operation == "close") {
+                    conn.close("Client requested close", 1000);
+                }
+                else {
                     throw std::invalid_argument("Unknown operation: " + operation);
                 }
             } catch (const std::exception &e) {
-                CROW_LOG_WARNING << "JSON parse error: " << e.what() << "\n";
+                CROW_LOG_WARNING << "[/Stream] ERROR: " << e.what() << "\n";
                 response["Result"] = "Error";
                 response["Error"] = e.what();
+                response["Content"] = "";
                 send_data(response.dump());
             }
         });

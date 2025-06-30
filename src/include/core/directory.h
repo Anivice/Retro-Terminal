@@ -13,7 +13,8 @@ public:
     using entry_t = std::string;                        // file name
     using stat_t = struct stat;                         // file stats
     using page_t = std::vector < uint64_t >;            // file hash pages
-    using block_pointers_t = std::vector < uint64_t >;  // blocks
+    using block_pointers_t = std::vector < uint64_t >;  // block pointers
+    using block_t = std::array <char, BLOCK_SIZE>;
 
     struct file_t
     {

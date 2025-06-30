@@ -6,8 +6,6 @@ endif ()
 
 project(fss CXX C)
 
-set(CMAKE_CXX_STANDARD 23)
-
 find_program(CCACHE_PROGRAM ccache)
 if (NOT "${CCACHE_PROGRAM}" STREQUAL "CCACHE_PROGRAM-NOTFOUND")
     set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
@@ -126,7 +124,7 @@ else ()
     add_compile_options(${optimization_flags})
     add_link_options(${optimization_link_flags})
 endif ()
-
+set(CMAKE_CXX_STANDARD 23)
 include_directories(src/include)
 add_compile_definitions(CORE_VERSION="0.0.1")
 add_compile_definitions(BACKEND_VERSION="0.0.1")
@@ -148,6 +146,8 @@ add_library(core SHARED
         src/helper/lz4hc.c              src/include/helper/lz4hc.h
         src/helper/xxhash.c             src/include/helper/xxhash.h
         src/core/directory.cpp          src/include/core/directory.h
+        src/core/bin2hex.cpp
+        src/core/crc64sum.cpp
 )
 
 if ("X${CMAKE_BUILD_TYPE}" STREQUAL "XDebug")
@@ -174,6 +174,10 @@ add_executable(backend
         src/backend/CrowStream.cpp
         src/backend/CrowRegister.h
         src/client/main.cpp
+        src/backend/file_access.cpp
+        src/backend/file_access.h
+        src/include/core/bin2hex.h
+        src/include/core/crc64sum.h
 )
 target_include_directories(backend PRIVATE src/json/include)
 target_link_libraries(backend PRIVATE core nlohmann_json::nlohmann_json)
