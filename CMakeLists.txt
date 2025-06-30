@@ -4,7 +4,7 @@ if ("X${CMAKE_BUILD_TYPE}" STREQUAL "XDebug")
     add_subdirectory(src/imgInTerm/)
 endif ()
 
-project(CyberTerm CXX C)
+project(fss CXX C)
 
 set(CMAKE_CXX_STANDARD 23)
 
@@ -147,7 +147,7 @@ add_library(core SHARED
         src/helper/lz4frame.c           src/include/helper/lz4frame.h src/include/helper/lz4frame_static.h
         src/helper/lz4hc.c              src/include/helper/lz4hc.h
         src/helper/xxhash.c             src/include/helper/xxhash.h
-        src/core/vterm.cpp              src/include/core/vterm.h
+        src/core/directory.cpp          src/include/core/directory.h
 )
 
 if ("X${CMAKE_BUILD_TYPE}" STREQUAL "XDebug")
@@ -168,18 +168,18 @@ add_executable(backend
         src/backend/service.cpp
         src/backend/instances.cpp       src/backend/instance.h
         src/backend/CrowLog.cpp         src/backend/CrowLog.h
+        src/backend/dictionary.cpp      src/backend/dictionary.h
         src/backend/CrowResourceAccess.cpp
+        src/backend/CrowPing.cpp
+        src/backend/CrowStream.cpp
         src/backend/CrowRegister.h
-        src/backend/CrowPing.cpp)
+        src/client/main.cpp
+)
 target_include_directories(backend PRIVATE src/json/include)
 target_link_libraries(backend PRIVATE core nlohmann_json::nlohmann_json)
-add_custom_target(CopyResourceFiles ALL
-        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${CMAKE_SOURCE_DIR}/src/backend/res ${CMAKE_BINARY_DIR}/res
-        COMMENT "Copying resources..."
-)
-add_dependencies(backend CopyResourceFiles)
 
 add_executable(compress src/utils/compress.c)
 target_link_libraries(compress PRIVATE core)
+
 add_executable(decompress src/utils/decompress.c)
 target_link_libraries(decompress PRIVATE core)

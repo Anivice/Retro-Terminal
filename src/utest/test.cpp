@@ -175,6 +175,26 @@ public:
     }
 } config_test;
 
+
+class vterm_test_ final : test::unit_t {
+public:
+    std::string name() override {
+        return "VTerm test";
+    }
+
+    std::string success() override {
+        return "VTerm test succeeded";
+    }
+
+    std::string failure() override {
+        return "VTerm test failed";
+    }
+
+    bool run() override {
+        return false;
+    }
+} vterm_test;
+
 std::map < std::string, void * > test::unit_tests = {
     // unit test dummies
     { "@@__delay_faulty__", &failed_delay_test },
@@ -183,7 +203,8 @@ std::map < std::string, void * > test::unit_tests = {
     { "@@__delay_simple__", &delay_unit_test },
     // unit test dummies end
 
-    { "LZ4", &lz4_test }, { "Config", &config_test } // utilities
+    { "LZ4", &lz4_test }, { "Config", &config_test }, // utilities
+    { "vterm", &vterm_test },
 };
 
 #endif

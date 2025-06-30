@@ -128,6 +128,7 @@ int main(int argc, char **argv)
 
         // setting up handler
         CrowPing();
+        CrowIntAlertSSE();
 
         auto server_thread = std::thread ([&port, &host]() {
             pthread_setname_np(pthread_self(), "Crow");
@@ -135,10 +136,13 @@ int main(int argc, char **argv)
             backend_instance.bindaddr(host).port(port).multithreaded().run();
         });
 
-        console_log("[main] Waiting 500ms for server to start before register SIGTSTP as graceful exit");
+        console_log("[main] Waiting 500ms for server to start before register SIGINT/SIGSTP as graceful exit");
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        // overwrite Crow's default signal handler
         std::signal(SIGTSTP, int_signal_handler);
-        console_log("[main] Use Ctrl+Z or SIGTSTP(", SIGTSTP, ") to shutdown server");
+        std::signal(SIGINT, int_signal_handler);
+        std::signal(SIGTERM, int_signal_handler);
+        console_log("[main] Use Ctrl+Z (SIGTSTP/", SIGTSTP, ") or Ctrl+C (SIGINT/", SIGINT, ") to shutdown the server");
 
         while (running) {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
