@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
             std::ranges::transform(case_insensitive_test_name, case_insensitive_test_name.begin(), ::tolower);
             std::cout << color::color(5,1,1) << "   " << id
                 << std::string(std::max(display_len - static_cast<int>(id.length()), 4), ' ')
-                << color::color(5,2,2) << ((test::unit_t*)base)->name() << color::no_color() << std::endl;
+                << color::color(5,2,2) << static_cast<test::unit_t *>(base)->name() << color::no_color() << std::endl;
         }
     };
 
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        auto * base_unit = (test::unit_t *)unit_address;
+        auto * base_unit = static_cast<test::unit_t *>(unit_address);
         int length = 48;
 
         if (is_terminal)
@@ -154,7 +154,8 @@ int main(int argc, char *argv[])
     std::cout << "\n\r\n"
               << color::color(1,5,4) << (selective_test ? argc - 1 : all_tests) << " UNIT TESTS\n"
               << color::color(0,5,0) << "    " << success << " PASSED\n"
-              << (failed == 2 ? color::color(2,0,0) : color::color(5,0,0)) << "    "
+              << ((!selective_test && failed == 2) || (selective_test && failed == 0)
+                  ? color::color(2,0,0) : color::color(5,0,0)) << "    "
               << failed << (selective_test ? " FAILED\n" : " FAILED (2 DESIGNED TO FAIL)\n") << color::no_color();
     std::cout << (is_terminal ? "\x1b[?25h" : "") << std::endl; // show cursor
 
