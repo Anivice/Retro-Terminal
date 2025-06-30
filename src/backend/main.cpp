@@ -10,6 +10,7 @@
 #include "instance.h"
 #include "CrowLog.h"
 #include "CrowRegister.h"
+#include "SQLiteCpp/SQLiteCpp.h"
 
 const arg_parser::parameter_vector Arguments = {
     { .name = "help",       .short_name = 'h', .arg_required = false,   .description = "Prints this help message" },
@@ -57,6 +58,30 @@ int main(int argc, char **argv)
 {
     try
     {
+        try
+        {
+            SQLite::Database db("demo.db3",
+                                SQLite::OPEN_READWRITE |
+                                SQLite::OPEN_CREATE |
+                                SQLite::OPEN_FULLMUTEX);
+
+            db.exec("CREATE TABLE IF NOT EXISTS demo(id INTEGER PRIMARY KEY, txt TEXT)");
+
+            SQLite::Transaction txn(db);
+            SQLite::Statement   ins(db, "INSERT INTO demo(txt) VALUES (?)");
+            ins.bind(1, "hello sqlitecpp");
+            ins.exec();
+            txn.commit();
+
+            SQLite::Statement qry(db, "SELECT id, txt FROM demo");
+            while (qry.executeStep())
+                std::cout << qry.getColumn(0) << " : " << qry.getColumn(1) << '\n';
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "SQLite exception: " << e.what() << '\n';
+        }
+
         arg_parser args(argc, argv, Arguments);
         auto contains = [&args](const std::string & name, std::string & val)->bool
         {

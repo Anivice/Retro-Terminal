@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.30)
 if ("X${CMAKE_BUILD_TYPE}" STREQUAL "XDebug")
     add_subdirectory(src/imgInTerm/)
 endif ()
+set(SQLITECPP_RUN_CPPLINT OFF)
+set(SQLITECPP_RUN_CPPTEST OFF)
+add_subdirectory(src/SQLiteCpp)
 
 project(fss CXX C)
 
@@ -124,6 +127,7 @@ else ()
     add_compile_options(${optimization_flags})
     add_link_options(${optimization_link_flags})
 endif ()
+
 set(CMAKE_CXX_STANDARD 23)
 include_directories(src/include)
 add_compile_definitions(CORE_VERSION="0.0.1")
@@ -146,8 +150,8 @@ add_library(core SHARED
         src/helper/lz4hc.c              src/include/helper/lz4hc.h
         src/helper/xxhash.c             src/include/helper/xxhash.h
         src/core/directory.cpp          src/include/core/directory.h
-        src/core/bin2hex.cpp
-        src/core/crc64sum.cpp
+        src/core/bin2hex.cpp            src/include/core/bin2hex.h
+        src/core/crc64sum.cpp           src/include/core/crc64sum.h
 )
 
 if ("X${CMAKE_BUILD_TYPE}" STREQUAL "XDebug")
@@ -169,18 +173,14 @@ add_executable(backend
         src/backend/instances.cpp       src/backend/instance.h
         src/backend/CrowLog.cpp         src/backend/CrowLog.h
         src/backend/dictionary.cpp      src/backend/dictionary.h
+        src/backend/file_access.cpp     src/backend/file_access.h
         src/backend/CrowResourceAccess.cpp
         src/backend/CrowPing.cpp
         src/backend/CrowStream.cpp
         src/backend/CrowRegister.h
-        src/client/main.cpp
-        src/backend/file_access.cpp
-        src/backend/file_access.h
-        src/include/core/bin2hex.h
-        src/include/core/crc64sum.h
 )
-target_include_directories(backend PRIVATE src/json/include)
-target_link_libraries(backend PRIVATE core nlohmann_json::nlohmann_json)
+target_include_directories(backend PRIVATE src/json/include src/SQLiteCpp/include)
+target_link_libraries(backend PRIVATE core nlohmann_json::nlohmann_json SQLite::SQLite3 SQLiteCpp)
 
 add_executable(compress src/utils/compress.c)
 target_link_libraries(compress PRIVATE core)

@@ -72,6 +72,9 @@ void CrowIntAlertSSE()
                 {
                     const std::string content_base64 = data["Content"];
                     const std::string content = base64::from_base64(content_base64);
+                    if (content.size() > BLOCK_SIZE) {
+                        throw std::runtime_error("Block too large");
+                    }
                     std::array<char, BLOCK_SIZE> remote_content{};
                     std::memcpy(remote_content.data(), content.c_str(), std::min(static_cast<uint64_t>(BLOCK_SIZE), content.size()));
                     response["Content"] = write_block_on_my_end(remote_content);

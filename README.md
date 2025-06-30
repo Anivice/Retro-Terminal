@@ -16,8 +16,10 @@ How to build goes here
 
 Different TODOs goes here
 
-- [ ]
-- [ ] 
+ - [ ] Sync file index before starting the service for all servers
+ - [ ] Lightweight data base (embedded)
+ - [ ] File index query
+ - [x] Block storage
 
 ## Used Public Repositories (Embedded in Source Files)
  * [CImg](https://github.com/GreycLab/CImg) Dependency for Terminal Image Viewer
