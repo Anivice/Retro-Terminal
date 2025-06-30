@@ -1,23 +1,33 @@
-#include <stdint.h>
 #include <stdio.h>
-#include "helper/lz4.h"
+#include <stdlib.h>
+#include "helper/lz4frame.h"
 
-#define BLOCK 4096
+#define CHUNK 65536                        /* 64 KiB */
 
 int main(void)
 {
-    static char   src[BLOCK];
-    static char   dst[LZ4_COMPRESSBOUND(BLOCK)];
-    for (;;)
-    {
-        uint32_t n = fread(src,1,BLOCK,stdin);
-        if (!n) break;
+    unsigned char  in [CHUNK];
+    size_t         max = LZ4F_compressBound(CHUNK, NULL);   /* worst-case */
+    unsigned char *out = malloc(max);
 
-        uint32_t c = LZ4_compress_default(src,dst,n,sizeof dst);
-        if (!c) { fputs("compress fail\n",stderr); return 1; }
-
-        fwrite(&n,1,sizeof n,stdout);
-        fwrite(&c,1,sizeof c,stdout);
-        fwrite(dst,1,c,stdout);
+    LZ4F_compressionContext_t cctx;
+    if (LZ4F_isError(LZ4F_createCompressionContext(&cctx, LZ4F_VERSION))) {
+        fprintf(stderr, "cant create ctx\n"); return 1;
     }
+
+    size_t n = LZ4F_compressBegin(cctx, out, max, NULL);
+    fwrite(out, 1, n, stdout);
+
+    while ((n = fread(in, 1, CHUNK, stdin))) {
+        size_t outSize = LZ4F_compressUpdate(cctx, out, max, in, n, NULL);
+        if (LZ4F_isError(outSize)) { fprintf(stderr, "compress\n"); return 2; }
+        fwrite(out, 1, outSize, stdout);
+    }
+
+    n = LZ4F_compressEnd(cctx, out, max, NULL);             /* adds footer */
+    fwrite(out, 1, n, stdout);
+
+    LZ4F_freeCompressionContext(cctx);
+    free(out);
+    return 0;
 }

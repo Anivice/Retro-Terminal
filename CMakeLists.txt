@@ -108,6 +108,9 @@ add_library(core SHARED
         src/core/cache.cpp              src/include/core/cache.h
         src/core/g_global_config_t.cpp  src/include/core/g_global_config_t.h
         src/helper/lz4.c                src/include/helper/lz4.h
+        src/helper/lz4frame.c           src/include/helper/lz4frame.h src/include/helper/lz4frame_static.h
+        src/helper/lz4hc.c              src/include/helper/lz4hc.h
+        src/helper/xxhash.c             src/include/helper/xxhash.h
 )
 
 add_executable(backend src/backend/main.cpp)

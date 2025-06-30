@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.30)
 
-set(PNG_STATIC "True")
+set(PNG_STATIC "ON")
+set(PNG_SHARED "OFF")
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libpng)
 
 project(tiv CXX)
