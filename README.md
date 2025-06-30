@@ -28,4 +28,5 @@ Different TODOs goes here
  * [LZ4](https://github.com/lz4/lz4) LZ4 compression
  * [ASIO](https://github.com/chriskohlhoff/asio) Dependency for Crow
  * [Crow](https://github.com/CrowCpp/Crow) C++ HTTP Server framework
- * [JSON](https://github.com/nlohmann/json) JSON Parser
+ * [JSON](https://github.com/nlohmann/json) JSON Parser for C++
+ * [SQLiteCPP](https://github.com/SRombauts/SQLiteCpp) SQLite 3 database for C++
