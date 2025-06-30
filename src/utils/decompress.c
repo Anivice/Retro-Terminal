@@ -25,8 +25,8 @@ int main(void)
 
         size_t srcSize = inSize - inPos;
         size_t dstSize = CHUNK;
-        size_t ret = LZ4F_decompress(dctx, out, &dstSize,
-                                     in + inPos, &srcSize, NULL);
+        const size_t ret = LZ4F_decompress(dctx, out, &dstSize,
+                                     in + inPos, &srcSize, nullptr);
         if (LZ4F_isError(ret)) { fprintf(stderr, "decode\n"); return 2; }
 
         fwrite(out, 1, dstSize, stdout);

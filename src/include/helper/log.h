@@ -34,6 +34,8 @@
 #include <any>
 #include <cstring>
 #include <regex>
+#include <algorithm>
+#include <ranges>
 #include "color.h"
 
 #define construct_simple_type_compare(type)                             \
@@ -270,6 +272,8 @@ namespace debug {
     template<std::size_t N>
     struct is_char_array<const char[N]> : std::true_type {};
 
+    extern int caller_max_size;
+
     template <typename... Args> void log_with_caller(const char * caller, const Args &...args)
     {
         std::lock_guard<std::mutex> lock(log_mutex);
@@ -278,8 +282,17 @@ namespace debug {
         using LastType = std::tuple_element_t<sizeof...(Args) - 1, std::tuple<Args...>>;
         const std::any last_arg = std::get<sizeof...(Args) - 1>(ref_tuple);
 
-        if (do_i_show_caller_next_time) {
-            _log(color::color(0, 2, 2), "[", caller, "] ", color::no_color());
+        if (do_i_show_caller_next_time)
+        {
+            const int current_caller_size = static_cast<int>(strlen(caller));
+            if (caller_max_size == 0 || caller_max_size < current_caller_size)
+            {
+                caller_max_size = current_caller_size;
+            }
+
+            _log(color::color(0, 2, 2), "[", caller, "]",
+                std::string(std::max(caller_max_size + 1 - current_caller_size, 1), ' '),
+                color::no_color());
         }
 
         if constexpr (!is_char_array<LastType>::value)
@@ -304,10 +317,10 @@ namespace debug {
 
 #include <source_location>
 namespace debug { std::string _strip_name_(const std::string & name); }
-#define debug_log(...)      if (DEBUG) ::debug::log_with_caller(debug::_strip_name_(std::source_location::current().function_name()).c_str(), color::color(2,2,2), "[DEBUG]: ", color::color(4,4,4), __VA_ARGS__, color::no_color(), "\n")
-#define verbose_log(...)    if (::debug::verbose) { if (DEBUG) ::debug::log_with_caller(debug::_strip_name_(std::source_location::current().function_name()).c_str(), color::color(2,2,2), "[VERBOSE]: ", color::no_color(), __VA_ARGS__); else ::debug::log(color::color(2,2,2), "[VERBOSE]: ", color::no_color(), __VA_ARGS__); }
-#define console_log(...)    if (DEBUG) ::debug::log_with_caller(debug::_strip_name_(std::source_location::current().function_name()).c_str(), __VA_ARGS__); else ::debug::log(__VA_ARGS__);
+#define debug_log(...)      if (DEBUG) ::debug::log_with_caller(debug::_strip_name_(std::source_location::current().function_name()).c_str(), color::color(2,2,2), "[DEBUG]:   ", color::color(4,4,4), __VA_ARGS__, color::no_color(), "\n")
+#define verbose_log(...)    if (::debug::verbose) ::debug::log_with_caller(debug::_strip_name_(std::source_location::current().function_name()).c_str(), color::color(2,2,2), "[VERBOSE]: ", color::no_color(), __VA_ARGS__, "\n");
+#define console_log(...)    if (DEBUG) ::debug::log_with_caller(debug::_strip_name_(std::source_location::current().function_name()).c_str(), __VA_ARGS__, "\n"); else ::debug::log(__VA_ARGS__, "\n");
 #define warning_log(...)    ::debug::log_with_caller(debug::_strip_name_(std::source_location::current().function_name()).c_str(), color::color(4,4,0), "[WARNING]: ", color::color(5,5,0), __VA_ARGS__, color::no_color(), "\n")
-#define error_log(...)      ::debug::log_with_caller(debug::_strip_name_(std::source_location::current().function_name()).c_str(), color::color(4,0,0), "[ERROR]: ", color::color(5,0,0), __VA_ARGS__, errno != 0 ? color::color(5,0,0) : color::color(0,4,0), "errno=", errno, " (", strerror(errno), ")", color::no_color(), "\n")
+#define error_log(...)      ::debug::log_with_caller(debug::_strip_name_(std::source_location::current().function_name()).c_str(), color::color(4,0,0), "[ERROR]:   ", color::color(5,0,0), __VA_ARGS__, errno != 0 ? color::color(5,0,0) : color::color(0,4,0), "errno=", errno, " (", strerror(errno), ")", color::no_color(), "\n")
 
 #endif // LOG_H

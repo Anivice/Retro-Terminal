@@ -6,6 +6,10 @@
 #include "helper/cpp_assert.h"
 #include "helper/get_env.h"
 #include "core/g_global_config_t.h"
+#include "crow.h"
+#include "instance.h"
+#include "CrowLog.h"
+#include "CrowRegister.h"
 
 const arg_parser::parameter_vector Arguments = {
     { .name = "help",       .short_name = 'h', .arg_required = false,   .description = "Prints this help message" },
@@ -44,6 +48,11 @@ void print_help(const std::string & program_name)
     }
 }
 
+volatile std::atomic_bool running = true;
+void int_signal_handler(int) {
+    running = false;
+}
+
 int main(int argc, char **argv)
 {
     try
@@ -72,8 +81,9 @@ int main(int argc, char **argv)
         if (contains("version", arg_val))
         {
             std::cout << color::color(5,5,5) << argv[0] << color::no_color()
-                    << color::color(0,3,3) << " version " << color::color(0,5,5) << VERSION
-                    << color::no_color() << std::endl;
+                << color::color(0,3,3) << " core version " << color::color(0,5,5) << CORE_VERSION
+                << color::color(0,3,3) << " backend version " << color::color(0,5,5) << BACKEND_VERSION
+                << color::no_color() << std::endl;
             return EXIT_SUCCESS;
         }
 
@@ -107,6 +117,41 @@ int main(int argc, char **argv)
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // server start
+        int port = g_global_config.get<int>("server.port");
+        auto host = g_global_config.get<std::string>("server.listen_addr");
+        if (port == -1) port = 8080;
+        if (host.empty()) host = "127.0.0.1";
+        if (DEBUG) crow::logger::setLogLevel(crow::LogLevel::Debug);
+        else crow::logger::setLogLevel(crow::LogLevel::Warning);
+        crow::logger::setHandler(&CrowLogHandler);
+
+        // setting up handler
+        CrowPing();
+
+        auto server_thread = std::thread ([&port, &host]() {
+            pthread_setname_np(pthread_self(), "Crow");
+            debug_log("Creating service instance on ", host, ":", port);
+            backend_instance.bindaddr(host).port(port).multithreaded().run();
+        });
+
+        console_log("[main] Waiting 500ms for server to start before register SIGTSTP as graceful exit");
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        std::signal(SIGTSTP, int_signal_handler);
+        console_log("[main] Use Ctrl+Z or SIGTSTP(", SIGTSTP, ") to shutdown server");
+
+        while (running) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+
+        console_log("[main] Stop signal received, shutting down...");
+        backend_instance.stop();
+
+        if (server_thread.joinable()) {
+            server_thread.join();
+        }
+
+        console_log("[main] Clean up finished");
     }
     catch (const std::exception & e)
     {

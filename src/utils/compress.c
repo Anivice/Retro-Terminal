@@ -7,7 +7,7 @@
 int main(void)
 {
     unsigned char  in [CHUNK];
-    size_t         max = LZ4F_compressBound(CHUNK, NULL);   /* worst-case */
+    const size_t   max = LZ4F_compressBound(CHUNK, nullptr);   /* worst-case */
     unsigned char *out = malloc(max);
 
     LZ4F_compressionContext_t cctx;
@@ -15,16 +15,16 @@ int main(void)
         fprintf(stderr, "cant create ctx\n"); return 1;
     }
 
-    size_t n = LZ4F_compressBegin(cctx, out, max, NULL);
+    size_t n = LZ4F_compressBegin(cctx, out, max, nullptr);
     fwrite(out, 1, n, stdout);
 
     while ((n = fread(in, 1, CHUNK, stdin))) {
-        size_t outSize = LZ4F_compressUpdate(cctx, out, max, in, n, NULL);
+        const size_t outSize = LZ4F_compressUpdate(cctx, out, max, in, n, nullptr);
         if (LZ4F_isError(outSize)) { fprintf(stderr, "compress\n"); return 2; }
         fwrite(out, 1, outSize, stdout);
     }
 
-    n = LZ4F_compressEnd(cctx, out, max, NULL);             /* adds footer */
+    n = LZ4F_compressEnd(cctx, out, max, nullptr);             /* adds footer */
     fwrite(out, 1, n, stdout);
 
     LZ4F_freeCompressionContext(cctx);

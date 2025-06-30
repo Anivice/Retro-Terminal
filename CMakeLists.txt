@@ -89,11 +89,47 @@ if ("X${CMAKE_BUILD_TYPE}" STREQUAL "XDebug")
     add_compile_options(${compiler_options})
     add_link_options(${linker_options})
 else ()
+    set(optimization_flags
+            -O3
+            -march=native
+            -mtune=native
+            -flto
+            -fomit-frame-pointer
+            -ffast-math
+            -fstrict-aliasing
+            -fdata-sections
+            -ffunction-sections
+            -D_FORTIFY_SOURCE=2
+            -fstack-protector-strong
+            -Wl,-z,relro -Wl,-z,now
+            -s
+    )
+
+    set(optimization_link_flags
+            -O3
+            -march=native
+            -mtune=native
+            -flto
+            -fomit-frame-pointer
+            -ffast-math
+            -fstrict-aliasing
+            -fdata-sections
+            -ffunction-sections
+            -Wl,--gc-sections
+            -D_FORTIFY_SOURCE=2
+            -fstack-protector-strong
+            -Wl,-z,relro -Wl,-z,now
+            -s
+    )
+
     add_compile_definitions(DEBUG=0)
+    add_compile_options(${optimization_flags})
+    add_link_options(${optimization_link_flags})
 endif ()
 
 include_directories(src/include)
-add_compile_definitions(VERSION="0.0.1")
+add_compile_definitions(CORE_VERSION="0.0.1")
+add_compile_definitions(BACKEND_VERSION="0.0.1")
 add_library(core SHARED
         src/include/helper/cpp_assert.h
         src/include/helper/WorkerThread.h
@@ -111,15 +147,8 @@ add_library(core SHARED
         src/helper/lz4frame.c           src/include/helper/lz4frame.h src/include/helper/lz4frame_static.h
         src/helper/lz4hc.c              src/include/helper/lz4hc.h
         src/helper/xxhash.c             src/include/helper/xxhash.h
+        src/core/vterm.cpp              src/include/core/vterm.h
 )
-
-add_executable(backend src/backend/main.cpp)
-target_link_libraries(backend PRIVATE core)
-
-add_executable(compress src/utils/compress.c)
-target_link_libraries(compress PRIVATE core)
-add_executable(decompress src/utils/decompress.c)
-target_link_libraries(decompress PRIVATE core)
 
 if ("X${CMAKE_BUILD_TYPE}" STREQUAL "XDebug")
     add_executable(test.exe src/utest/test.cpp src/include/test/test.h src/utest/main.cpp)
@@ -132,3 +161,25 @@ if ("X${CMAKE_BUILD_TYPE}" STREQUAL "XDebug")
             DEPENDS test.exe
     )
 endif ()
+
+add_subdirectory(src/json)
+add_executable(backend
+        src/backend/main.cpp
+        src/backend/service.cpp
+        src/backend/instances.cpp       src/backend/instance.h
+        src/backend/CrowLog.cpp         src/backend/CrowLog.h
+        src/backend/CrowResourceAccess.cpp
+        src/backend/CrowRegister.h
+        src/backend/CrowPing.cpp)
+target_include_directories(backend PRIVATE src/json/include)
+target_link_libraries(backend PRIVATE core nlohmann_json::nlohmann_json)
+add_custom_target(CopyResourceFiles ALL
+        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${CMAKE_SOURCE_DIR}/src/backend/res ${CMAKE_BINARY_DIR}/res
+        COMMENT "Copying resources..."
+)
+add_dependencies(backend CopyResourceFiles)
+
+add_executable(compress src/utils/compress.c)
+target_link_libraries(compress PRIVATE core)
+add_executable(decompress src/utils/decompress.c)
+target_link_libraries(decompress PRIVATE core)

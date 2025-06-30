@@ -2,7 +2,7 @@
 
 std::mutex debug::log_mutex;
 std::atomic_bool debug::verbose = false;
-
+int debug::caller_max_size = 0;
 bool debug::do_i_show_caller_next_time = true;
 std::string debug::_strip_name_(const std::string & name)
 {
